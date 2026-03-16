@@ -1,0 +1,152 @@
+{% extends 'base.html' %}
+{% block content %}
+<style>
+    .pos-card {
+        background: #ffffff;
+        border: none;
+        border-radius: 20px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+    }
+    .input-group-text { background: transparent; border-right: none; color: #6c757d; }
+    .form-control, .form-select { 
+        border-left: none; 
+        padding: 12px; 
+        border-radius: 0 10px 10px 0; 
+    }
+    .form-control:focus { box-shadow: none; border-color: #dee2e6; }
+    .label-pos { font-weight: 600; color: #495057; font-size: 0.9rem; margin-bottom: 8px; display: block; }
+    .total-display-box {
+        background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+        border-radius: 15px;
+        padding: 25px;
+        border: 1px dashed #dee2e6;
+    }
+    .btn-confirm {
+        background: #2c3e50;
+        color: white;
+        border-radius: 12px;
+        font-weight: 600;
+        transition: all 0.3s;
+        border: none;
+    }
+    .btn-confirm:hover { background: #1a252f; transform: translateY(-2px); color: white; }
+    /* Visual indicator for stock */
+    .stock-badge { font-size: 0.75rem; padding: 4px 8px; border-radius: 6px; }
+</style>
+
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-7">
+            <div class="pos-card p-4 p-md-5">
+                <div class="text-center mb-4">
+                    <div class="d-inline-block p-3 bg-light rounded-circle mb-3">
+                        <i class="fas fa-cash-register fa-2x text-primary"></i>
+                    </div>
+                    <h3 class="fw-bold">Create New Receipt</h3>
+                    <p class="text-muted">Fill in transaction details below</p>
+                </div>
+
+                <form method="POST" id="saleForm">
+                    {% csrf_token %}
+                    
+                    <div class="mb-4">
+                        <label class="label-pos"><i class="fas fa-tag me-2"></i>Product / Spare Part</label>
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="fas fa-search"></i></span>
+                            <select name="product" id="product_select" class="form-select select2" required>
+                                <option value="" selected disabled>Type to search parts...</option>
+                                {% for p in products %}
+                                <option value="{{ p.id }}" 
+                                        data-price="{{ p.selling_price }}" 
+                                        data-min="{{ p.min_price }}"
+                                        data-stock="{{ p.quantity }}">
+                                    {{ p.name }} ({{ p.quantity }} in stock)
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-5 mb-4">
+                            <label class="label-pos"><i class="fas fa-calculator me-2"></i>Qty</label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="fas fa-layer-group"></i></span>
+                                <input type="number" name="quantity" id="qty" class="form-control" value="1" min="1">
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-7 mb-4">
+                            <label class="label-pos"><i class="fas fa-hand-holding-usd me-2"></i>Price (UGX)</label>
+                            <div class="input-group">
+                                <span class="input-group-text">UGX</span>
+                                <input type="number" name="negotiated_price" id="price" class="form-control" placeholder="0.00">
+                            </div>
+                            <small id="price_hint" class="text-muted mt-1 d-block"></small>
+                        </div>
+                    </div>
+
+                    <div class="total-display-box text-center mb-4">
+                        <span class="text-uppercase tracking-wider small text-muted d-block mb-1">Grand Total Amount</span>
+                        <div class="d-flex justify-content-center align-items-baseline">
+                            <span id="live_total" class="display-5 fw-bold text-primary">0</span>
+                            <span class="ms-2 h4 text-primary">UGX</span>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn btn-confirm w-100 py-3 shadow-sm">
+                        <i class="fas fa-check-circle me-2"></i> COMPLETE SALE
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+const productSelect = document.getElementById('product_select');
+const qtyInput = document.getElementById('qty');
+const priceInput = document.getElementById('price');
+const totalDisplay = document.getElementById('live_total');
+const priceHint = document.getElementById('price_hint');
+
+// 1. Auto-fill Price when Product is selected
+productSelect.addEventListener('change', function() {
+    const selectedOption = this.options[this.selectedIndex];
+    const defaultPrice = selectedOption.getAttribute('data-price');
+    const minPrice = selectedOption.getAttribute('data-min');
+    
+    priceInput.value = defaultPrice;
+    priceHint.innerHTML = `<i class="fas fa-info-circle"></i> Recommended: ${Number(defaultPrice).toLocaleString()} | Min: ${Number(minPrice).toLocaleString()}`;
+    calculate();
+});
+
+// 2. Real-time Calculation & Bargain Alert
+function calculate() {
+    const selectedOption = productSelect.options[productSelect.selectedIndex];
+    if (!selectedOption.value) return;
+
+    const minPrice = parseFloat(selectedOption.getAttribute('data-min'));
+    const userPrice = parseFloat(priceInput.value || 0);
+    const qty = parseFloat(qtyInput.value || 0);
+    
+    // Calculate Total
+    let total = qty * userPrice;
+    totalDisplay.innerText = total.toLocaleString();
+
+    // Visual Bargain Warning
+    if (userPrice < minPrice) {
+        priceInput.style.borderColor = "#dc3545";
+        priceInput.style.color = "#dc3545";
+        totalDisplay.classList.replace('text-primary', 'text-danger');
+    } else {
+        priceInput.style.borderColor = "#dee2e6";
+        priceInput.style.color = "#212529";
+        totalDisplay.classList.replace('text-danger', 'text-primary');
+    }
+}
+
+qtyInput.addEventListener('input', calculate);
+priceInput.addEventListener('input', calculate);
+</script>
+{% endblock %}

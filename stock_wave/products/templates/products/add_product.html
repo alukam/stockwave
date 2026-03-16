@@ -1,0 +1,51 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow-lg border-0">
+                <div class="card-header bg-primary text-white p-3">
+                    <h5 class="mb-0"><i class="fas fa-plus-square me-2"></i> Register New Stock Item</h5>
+                </div>
+                <div class="card-body p-4">
+                    <form method="POST">
+                        {% csrf_token %}
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Part/Product Name</label>
+                            <input type="text" name="name" class="form-control p-3 bg-light border-0" placeholder="e.g. Toyota Brake Pads" required>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label fw-bold">Opening Qty</label>
+                                <input type="number" name="quantity" class="form-control p-3 bg-light border-0" value="0" required>
+                            </div>
+                            <div class="col-md-8 mb-3">
+                                <label class="form-label fw-bold">Buying Price (Cost)</label>
+                                <input type="number" name="buying_price" class="form-control p-3 bg-light border-0" placeholder="UGX" required>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-bold text-success">Standard Selling Price</label>
+                                <input type="number" name="selling_price" class="form-control p-3 bg-light border-0" placeholder="UGX" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-bold text-danger">Minimum Price (Floor)</label>
+                                <input type="number" name="min_price" class="form-control p-3 bg-light border-0" placeholder="UGX" required>
+                            </div>
+                        </div>
+
+                        <div class="d-flex gap-2 mt-4">
+                            <button type="submit" class="btn btn-primary w-100 py-3 fw-bold">SAVE TO INVENTORY</button>
+                            <a href="{% url 'inventory' %}" class="btn btn-light w-50 py-3">CANCEL</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

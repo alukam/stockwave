@@ -1,0 +1,103 @@
+{% extends 'base.html' %}
+{% load humanize %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row g-4">
+        <div class="col-md-5">
+            <div class="glass-card p-4 shadow-sm border-top border-4 border-primary">
+                <h4 class="fw-bold mb-1">{{ debtor.name }}</h4>
+                <p class="text-muted mb-4"><i class="fas fa-phone me-2"></i>{{ debtor.phone }}</p>
+
+                <div class="p-3 bg-light rounded mb-3">
+                    <small class="text-muted d-block text-uppercase fw-bold" style="font-size: 0.7rem;">Product Taken</small>
+                    <span class="fw-bold">{{ debtor.product.name }} (x{{ debtor.quantity }})</span>
+                </div>
+
+                <div class="row text-center g-2">
+                    <div class="col-6">
+                        <div class="p-2 border rounded">
+                            <small class="text-muted d-block small">TOTAL DEBT</small>
+                            <span class="fw-bold">{{ debtor.total_amount|intcomma }}</span>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="p-2 border rounded">
+                            <small class="text-muted d-block small">PAID SO FAR</small>
+                            <span class="fw-bold text-success">{{ debtor.amount_paid|intcomma }}</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-4 p-3 bg-danger bg-opacity-10 rounded border border-danger text-center">
+                    <small class="text-danger fw-bold d-block">REMAINING BALANCE</small>
+                    <h3 class="fw-bold text-danger mb-0">{{ debtor.balance|intcomma }} UGX</h3>
+                </div>
+
+                {% if debtor.balance > 0 %}
+                <form method="POST" class="mt-4 pt-4 border-top">
+                    {% csrf_token %}
+                    <label class="form-label fw-bold small">Record Partial Payment</label>
+                    <div class="input-group">
+                        <input type="number" name="amount" class="form-control" placeholder="Amount..." required>
+                        <button type="submit" class="btn btn-success px-4">Pay</button>
+                    </div>
+                </form>
+                {% else %}
+                <div class="alert alert-success mt-4 text-center py-2">
+                    <i class="fas fa-check-circle me-2"></i> Debt Fully Cleared
+                </div>
+                {% endif %}
+                
+                <a href="{% url 'debtor_list' %}" class="btn btn-link w-100 mt-3 text-decoration-none text-muted small">
+                    <i class="fas fa-arrow-left me-2"></i> Back to Ledger
+                </a>
+            </div>
+        </div>
+
+        <div class="col-md-7">
+            <div class="glass-card p-4 shadow-sm h-100">
+                <h5 class="fw-bold mb-4">Payment History</h5>
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Date</th>
+                                <th>Amount Paid</th>
+                                <th class="text-end">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for payment in debtor.payments.all %}
+                            <tr>
+                                <td class="small">{{ payment.date|date:"d M Y, h:i A" }}</td>
+                                <td class="text-success fw-bold">+ {{ payment.amount_paid|intcomma }}</td>
+                                <td class="text-end">
+                                    <div class="btn-group">
+                                        <a href="{% url 'edit_payment' payment.id %}" class="btn btn-sm btn-outline-primary border-0" title="Edit">
+                                            <i class="fas fa-edit"></i>
+                                        </a>
+                                        <a href="{% url 'delete_payment' payment.id %}" 
+                                           class="btn btn-sm btn-outline-danger border-0" 
+                                           title="Delete"
+                                           onclick="return confirm('Wait! Deleting this will increase the balance. Continue?')">
+                                            <i class="fas fa-trash"></i>
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="3" class="text-center py-5 text-muted">
+                                    No payments recorded yet.
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

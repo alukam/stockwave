@@ -1,0 +1,21 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-4">
+            <div class="glass-card p-4 shadow">
+                <h5 class="fw-bold mb-4">Edit Payment</h5>
+                <form method="POST">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label class="form-label">Amount Paid (UGX)</label>
+                        <input type="number" name="amount" class="form-control" value="{{ payment.amount_paid }}" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary w-100">Update Payment</button>
+                    <a href="{% url 'debtor_detail' payment.debtor.id %}" class="btn btn-link w-100 text-muted">Cancel</a>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

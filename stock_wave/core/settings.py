@@ -47,6 +47,8 @@ MIDDLEWARE = [
 
 ROOT_URLCONF = 'core.urls'
 
+
+
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
@@ -68,13 +70,14 @@ WSGI_APPLICATION = 'core.wsgi.application'
 # --- DATABASE ---
 # This looks for a DATABASE_URL environment variable (from Render). 
 # If it doesn't find one, it falls back to your local PostgreSQL settings.
+
+# Use the Render database URL if it exists, otherwise use local SQLite
 DATABASES = {
     'default': dj_database_url.config(
-        default='postgres://inventory_users:2000@2000@localhost:5432/inventory_db',
+        default=f"sqlite:///{os.path.join(BASE_DIR, 'db.sqlite3')}",
         conn_max_age=600
     )
 }
-
 # --- STATIC FILES ---
 STATIC_URL = 'static/'
 STATICFILES_DIRS = [BASE_DIR / 'static']
@@ -83,11 +86,10 @@ STATIC_ROOT = BASE_DIR / 'staticfiles' # Required for production
 # Enable WhiteNoise compression
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
-# --- LOGINS ---
-LOGIN_URL = '/login/'
+# settings.py
+LOGIN_URL = '/accounts/login/'
 LOGIN_REDIRECT_URL = '/'
-LOGOUT_REDIRECT_URL = '/login/'
-
+LOGOUT_REDIRECT_URL = '/accounts/login/'
 # --- MISC ---
 LANGUAGE_CODE = 'en-us'
 TIME_ZONE = 'Africa/Kampala'

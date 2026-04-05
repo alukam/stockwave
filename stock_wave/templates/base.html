@@ -1,153 +1,254 @@
 {% load static %}
 <!DOCTYPE html>
-<html lang="en" id="htmlPage">
+<html lang="en" id="htmlPage" data-bs-theme="light">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>StockWave | Spare Parts Management</title>
+    
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+
     <style>
         :root { 
-            --primary-color: #1a252f; 
-            --accent-color: #3498db; 
-            --sidebar-width: 240px;
+            --primary-color: #0f172a; 
+            --accent-color: #3b82f6; 
+            --bg-light: #f8fafc; 
+            --sidebar-width: 260px;
         }
 
-        /* Support for Dark Mode Colors */
-        [data-bs-theme="dark"] body { background-color: #0b0f13; }
-        [data-bs-theme="dark"] .sidebar { background: #0d1117; border-right: 1px solid #30363d; }
-        [data-bs-theme="dark"] .glass-card { background: #161b22; border-color: #30363d; }
-        [data-bs-theme="dark"] .navbar { background-color: #161b22 !important; border-bottom: 1px solid #30363d !important; }
-
-        body { background-color: #f4f7f6; font-family: 'Inter', sans-serif; transition: background 0.3s ease; }
-        .sidebar { background: var(--primary-color); min-height: 100vh; z-index: 1000; transition: 0.3s; }
-        .nav-link { color: #bdc3c7 !important; padding: 12px 20px !important; border-left: 4px solid transparent; }
-        .nav-link:hover, .nav-link.active { 
-            background: rgba(255,255,255,0.1); 
-            color: white !important; 
-            border-left: 4px solid var(--accent-color); 
+        body { 
+            background-color: var(--bs-body-bg); 
+            font-family: 'Plus Jakarta Sans', sans-serif; 
+            transition: all 0.3s ease; 
+            color: var(--bs-body-color);
+            margin: 0;
         }
-        .glass-card { background: white; border-radius: 12px; border: 1px solid #e0e0e0; transition: 0.3s; }
-        .glass-card:hover { box-shadow: 0 10px 20px rgba(0,0,0,0.05); }
-        .main-content { padding: 30px; }
-        .logout-btn { background: none; border: none; color: #e74c3c !important; width: 100%; text-align: left; padding: 12px 20px; }
+
+        /* --- Sidebar Navigation --- */
+        .sidebar { 
+            background: var(--primary-color); 
+            width: var(--sidebar-width);
+            height: 100vh; 
+            z-index: 1040; 
+            position: fixed;
+            top: 0;
+            left: 0;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            border-right: 1px solid rgba(255,255,255,0.05);
+            overflow-y: auto;
+            padding-top: 70px;
+        }
         
-        .theme-toggle-wrapper { cursor: pointer; display: flex; align-items: center; }
-    </style>
-</head>
-<body>
+        /* --- Desktop vs Mobile Layout --- */
+        @media (min-width: 992px) {
+            .main-content { margin-left: var(--sidebar-width); width: calc(100% - var(--sidebar-width)); }
+        }
 
-<nav class="navbar navbar-expand-lg bg-white sticky-top border-bottom">
-    <div class="container-fluid">
-        <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#sidebarMenu">
-            <i class="fas fa-bars"></i>
+        @media (max-width: 991.98px) {
+            .sidebar { left: -100%; width: 280px; }
+            .sidebar.show { left: 0; }
+            .main-content { margin-left: 0 !important; width: 100%; padding: 20px !important; }
+        }
+
+        /* --- Navbar --- */
+        .navbar { 
+            height: 70px; 
+            backdrop-filter: blur(8px); 
+            background: rgba(var(--bs-body-bg-rgb), 0.8) !important; 
+            z-index: 1050; 
+            position: fixed;
+            width: 100%;
+            top: 0;
+        }
+
+        .nav-link { 
+            color: #94a3b8 !important; 
+            padding: 12px 24px !important; 
+            margin: 4px 15px;
+            border-radius: 8px;
+            font-weight: 500;
+            transition: all 0.2s ease;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+        }
+
+        .nav-link:hover, .nav-link.active { 
+            background: var(--accent-color) !important; 
+            color: white !important; 
+        }
+
+        .sidebar-heading {
+            color: #475569;
+            font-size: 0.75rem;
+            padding: 1.5rem 1.8rem 0.5rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .main-content { padding: 40px; margin-top: 70px; min-height: calc(100vh - 70px); }
+
+        .logout-btn { 
+            background: rgba(239, 68, 68, 0.1); border: none; color: #ef4444 !important; 
+            width: calc(100% - 30px); margin: 20px 15px; border-radius: 8px; padding: 12px 20px; font-weight: 600;
+            transition: 0.2s;
+            text-align: left;
+        }
+        .logout-btn:hover { background: #ef4444; color: white !important; }
+        
+        /* --- Utilities --- */
+        .transition-icon { transition: transform 0.3s ease; margin-left: auto; }
+        .nav-link[aria-expanded="true"] .transition-icon { transform: rotate(180deg); }
+        .text-emphasis { color: var(--bs-emphasis-color) !important; }
+
+        /* --- Dark Mode Specifics --- */
+        [data-bs-theme="dark"] .bg-body-tertiary { background-color: #0f172a !important; }
+        [data-bs-theme="dark"] .sidebar { background: #020617; }
+    </style>
+    {% block extra_css %}{% endblock %}
+</head>
+<body id="body-pd">
+
+<nav class="navbar border-bottom">
+    <div class="container-fluid px-4">
+        <button class="btn d-lg-none me-2 text-emphasis border-0" id="header-toggle">
+            <i class="fas fa-bars fa-lg" id="toggle-icon"></i>
         </button>
-        <a class="navbar-brand fw-bold" href="{% url 'dashboard' %}">
-            <i class="fas fa-wave-square text-primary me-2"></i>STOCKWAVE
+
+        <a class="navbar-brand fw-bold d-flex align-items-center" href="{% url 'dashboard' %}">
+            <div class="bg-primary text-white rounded-3 p-1 me-2 d-flex align-items-center justify-content-center" style="width: 32px; height: 32px;">
+                <i class="fas fa-wave-square fa-xs"></i>
+            </div>
+            <span class="text-emphasis">STOCKWAVE</span>
         </a>
         
         <div class="ms-auto d-flex align-items-center">
-            <div class="form-check form-switch me-3 theme-toggle-wrapper">
+            <div class="form-check form-switch me-3">
                 <input class="form-check-input" type="checkbox" id="darkModeToggle">
-                <label class="form-check-label ms-2 small text-muted" for="darkModeToggle">
-                    <i class="fas fa-moon"></i>
-                </label>
             </div>
-            <span class="text-muted small"><i class="fas fa-user-circle"></i> {{ user.username }}</span>
+            <span class="text-emphasis small fw-semibold">{{ user.username|upper }}</span>
         </div>
     </div>
 </nav>
 
-<div class="container-fluid">
-    <div class="row">
-        <nav id="sidebarMenu" class="col-md-3 col-lg-2 collapse d-lg-block sidebar shadow">
-            <div class="nav flex-column mt-3">
+<div class="container-fluid p-0">
+    <nav id="sidebarMenu" class="sidebar shadow-sm">
+        <div class="d-flex flex-column h-100">
+            <div class="nav flex-column flex-grow-1 pt-3">
                 
-                <a href="{% url 'dashboard' %}" class="nav-link {% if request.path == '/' %}active{% endif %}">
-                    <i class="fas fa-th-large me-3"></i> Dashboard
+                <a href="{% url 'dashboard' %}" class="nav-link {% if 'dashboard' in request.path %}active{% endif %}">
+                    <i class="fas fa-chart-pie me-3"></i> Dashboard
                 </a>
 
-                <div class="px-3 mt-4 mb-2 text-uppercase text-muted small fw-bold" style="font-size: 0.7rem;">Stock & Sales</div>
-                
+                <div class="sidebar-heading">Inventory</div>
                 <a href="{% url 'inventory' %}" class="nav-link {% if 'inventory' in request.path %}active{% endif %}">
-                    <i class="fas fa-boxes me-3"></i> Products List
+                    <i class="fas fa-boxes-stacked me-3"></i> Products List
                 </a>
 
-                <a href="{% url 'sales_list' %}" class="nav-link {% if 'sales' in request.path %}active{% endif %}">
-                    <i class="fas fa-shopping-cart me-3"></i> Sale History
+                <div class="sidebar-heading">Transactions</div>
+                <a class="nav-link d-flex align-items-center" 
+                   data-bs-toggle="collapse" href="#salesSubmenu" role="button" 
+                   aria-expanded="{% if 'sales' in request.path %}true{% else %}false{% endif %}">
+                    <span><i class="fas fa-cart-shopping me-3"></i> Sales</span>
+                    <i class="fas fa-chevron-down fa-xs transition-icon"></i>
+                </a>
+                <div class="collapse {% if 'sales' in request.path %}show{% endif %}" id="salesSubmenu">
+                    <div class="nav flex-column">
+                        <a href="{% url 'sales_management' %}" class="nav-link py-2 ps-5 small {% if 'management' in request.path %}active{% endif %}">
+                            <i class="fas fa-list-ul me-2"></i> Sales List
+                        </a>
+                        <a href="{% url 'add_sale' %}" class="nav-link py-2 ps-5 small {% if 'add' in request.path %}active{% endif %}">
+                            <i class="fas fa-plus-circle me-2"></i> New Sale
+                        </a>
+                    </div>
+                </div>
+
+                <div class="sidebar-heading">Financials</div>
+                <a href="{% url 'debtor_list' %}" class="nav-link {% if 'debtor' in request.path %}active{% endif %}">
+                    <i class="fas fa-user-clock me-3"></i> Debtors
                 </a>
 
-                <div class="px-3 mt-4 mb-2 text-uppercase text-muted small fw-bold" style="font-size: 0.7rem;">Accounts</div>
-
-                <a href="{% url 'debtor_list' %}" class="nav-link {% if 'debtors' in request.path %}active{% endif %}">
-                    <i class="fas fa-users-cog me-3"></i> Debtors Ledger
-                </a>
-
-                <a href="{% url 'expense_list' %}" class="nav-link {% if 'expenses' in request.path %}active{% endif %}">
-                    <i class="fas fa-wallet me-3"></i> Business Expenses
-                </a>
-
-                <div class="px-3 mt-4 mb-2 text-uppercase text-muted small fw-bold" style="font-size: 0.7rem;">Analysis</div>
-
-                <a href="{% url 'audit_report' %}" class="nav-link {% if 'reports' in request.path %}active{% endif %}">
-                    <i class="fas fa-file-invoice-dollar me-3"></i> Audit Report
+                <a href="{% url 'expense_list' %}" class="nav-link {% if 'expense' in request.path %}active{% endif %}">
+                    <i class="fas fa-wallet me-3"></i> Expenses
                 </a>
 
                 {% if user.is_superuser %}
-                    <div class="px-3 mt-4 mb-2 text-uppercase text-muted small fw-bold" style="font-size: 0.7rem;">Admin Only</div>
-                    <a href="/admin/" class="nav-link" target="_blank">
-                        <i class="fas fa-user-shield me-3"></i> System Admin
-                    </a>
+                <div class="sidebar-heading">Security</div>
+                <a href="{% url 'admin_management' %}" class="nav-link {% if 'admin' in request.path %}active{% endif %}">
+                    <i class="fas fa-shield-halved me-3"></i> Admin Control
+                </a>
                 {% endif %}
-
-                <hr class="border-secondary mx-3">
-                <form action="{% url 'admin:logout' %}" method="post">
-                    {% csrf_token %}
-                    <button type="submit" class="logout-btn"><i class="fas fa-sign-out-alt me-3"></i> Logout</button>
-                </form>
             </div>
-        </nav>
 
-        <main class="col-md-9 ms-sm-auto col-lg-10 main-content">
-            {% if messages %}
-                {% for message in messages %}
-                    <div class="alert alert-{{ message.tags }} alert-dismissible fade show border-0 shadow-sm">
-                        {{ message }} <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                    </div>
-                {% endfor %}
-            {% endif %}
-            
-            {% block content %}{% endblock %}
-        </main>
-    </div>
+            <form action="{% url 'logout' %}" method="post" class="mt-auto pb-4">
+                {% csrf_token %}
+                <button type="submit" class="logout-btn">
+                    <i class="fas fa-arrow-right-from-bracket me-2"></i> Sign Out
+                </button>
+            </form>
+        </div>
+    </nav>
+
+    <main class="main-content">
+        {% block content %}{% endblock %}
+    </main>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-
 <script>
+    // Theme Logic
     const htmlPage = document.getElementById('htmlPage');
     const darkModeToggle = document.getElementById('darkModeToggle');
-
-    // Load saved theme
     const currentTheme = localStorage.getItem('theme') || 'light';
+    
     htmlPage.setAttribute('data-bs-theme', currentTheme);
     darkModeToggle.checked = currentTheme === 'dark';
 
-    // Theme toggle logic
     darkModeToggle.addEventListener('change', () => {
-        if (darkModeToggle.checked) {
-            htmlPage.setAttribute('data-bs-theme', 'dark');
-            localStorage.setItem('theme', 'dark');
-        } else {
-            htmlPage.setAttribute('data-bs-theme', 'light');
-            localStorage.setItem('theme', 'light');
-        }
-        window.dispatchEvent(new Event('themeChanged'));
+        const theme = darkModeToggle.checked ? 'dark' : 'light';
+        htmlPage.setAttribute('data-bs-theme', theme);
+        localStorage.setItem('theme', theme);
     });
-</script>
 
-{% block extra_js %}{% endblock %}
+    // Sidebar Toggle Logic
+    const toggleBtn = document.getElementById('header-toggle');
+    const sidebar = document.getElementById('sidebarMenu');
+    const toggleIcon = document.getElementById('toggle-icon');
+
+    if(toggleBtn) {
+        toggleBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            sidebar.classList.toggle('show');
+            toggleIcon.classList.toggle('fa-bars');
+            toggleIcon.classList.toggle('fa-times');
+        });
+    }
+
+    // Close sidebar on mobile when clicking outside
+    document.addEventListener('click', (e) => {
+        if (window.innerWidth < 992 && sidebar.classList.contains('show')) {
+            if (!sidebar.contains(e.target) && !toggleBtn.contains(e.target)) {
+                sidebar.classList.remove('show');
+                toggleIcon.classList.add('fa-bars');
+                toggleIcon.classList.remove('fa-times');
+            }
+        }
+    });
+
+    function togglePassword(fieldId, iconId) {
+    const passwordInput = document.getElementById(fieldId);
+    const icon = document.getElementById(iconId);
+    
+    if (passwordInput.type === 'password') {
+        passwordInput.type = 'text';
+        icon.classList.replace('fa-eye', 'fa-eye-slash');
+    } else {
+        passwordInput.type = 'password';
+        icon.classList.replace('fa-eye-slash', 'fa-eye');
+    }
+}
+</script>
 </body>
 </html>

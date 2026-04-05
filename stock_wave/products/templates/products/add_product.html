@@ -1,46 +1,158 @@
 {% extends 'base.html' %}
+{% load static %}
+
+{% block extra_css %}
+<style>
+    /* Full-width control */
+    .wide-container {
+        max-width: 98% !important;
+    }
+
+    /* Adaptive Card Styling */
+    .registration-card {
+        background: var(--bs-body-bg);
+        border: 1px solid var(--bs-border-color);
+        border-radius: 20px;
+        overflow: hidden;
+    }
+
+    .form-header {
+        background: linear-gradient(135deg, #3b82f6, #2563eb);
+        padding: 2.5rem;
+        color: white;
+    }
+
+    /* High-Visibility Inputs */
+    .form-control-pro {
+        background-color: var(--bs-tertiary-bg) !important;
+        color: var(--bs-body-color) !important;
+        border: 2px solid var(--bs-border-color) !important;
+        padding: 0.8rem 1.2rem;
+        border-radius: 12px;
+        transition: 0.2s ease;
+    }
+
+    .form-control-pro:focus {
+        border-color: var(--bs-primary) !important;
+        background-color: var(--bs-secondary-bg) !important;
+        box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.15);
+    }
+
+    /* Section Labels */
+    .section-label {
+        font-weight: 800;
+        text-transform: uppercase;
+        font-size: 0.75rem;
+        letter-spacing: 1px;
+        color: var(--bs-primary);
+        margin-bottom: 1rem;
+        display: block;
+    }
+
+    /* Image Preview Box */
+    .photo-upload-zone {
+        border: 2px dashed var(--bs-border-color);
+        border-radius: 15px;
+        padding: 20px;
+        text-align: center;
+        background: var(--bs-tertiary-bg);
+        transition: 0.3s;
+    }
+
+    .photo-upload-zone:hover {
+        border-color: var(--bs-primary);
+    }
+
+    /* Price Highlight */
+    .selling-price-input {
+        border-color: #10b981 !important; /* Green border for selling price */
+    }
+</style>
+{% endblock %}
 
 {% block content %}
-<div class="container py-4">
+<div class="container-fluid py-4 wide-container">
     <div class="row justify-content-center">
-        <div class="col-md-8">
-            <div class="card shadow-lg border-0">
-                <div class="card-header bg-primary text-white p-3">
-                    <h5 class="mb-0"><i class="fas fa-plus-square me-2"></i> Register New Stock Item</h5>
+        <div class="col-xl-10">
+            <div class="registration-card shadow-lg border-0">
+                <div class="form-header d-flex justify-content-between align-items-center">
+                    <div>
+                        <h2 class="fw-black mb-1"><i class="fas fa-barcode me-3"></i>New Stock Entry</h2>
+                        <p class="mb-0 opacity-75">Add a new spare part to the Stockwave database</p>
+                    </div>
+                    <i class="fas fa-boxes fa-3x opacity-25"></i>
                 </div>
-                <div class="card-body p-4">
-                    <form method="POST">
+
+                <div class="card-body p-4 p-md-5">
+                    <form method="POST" enctype="multipart/form-data">
                         {% csrf_token %}
-                        <div class="mb-3">
-                            <label class="form-label fw-bold">Part/Product Name</label>
-                            <input type="text" name="name" class="form-control p-3 bg-light border-0" placeholder="e.g. Toyota Brake Pads" required>
-                        </div>
-                        
-                        <div class="row">
-                            <div class="col-md-4 mb-3">
-                                <label class="form-label fw-bold">Opening Qty</label>
-                                <input type="number" name="quantity" class="form-control p-3 bg-light border-0" value="0" required>
+
+                        <span class="section-label">1. Part Identity</span>
+                        <div class="row g-4 mb-5">
+                            <div class="col-12">
+                                <label class="form-label fw-bold">Commercial Name (How it's sold)</label>
+                                <input type="text" name="name" class="form-control form-control-pro form-control-lg fw-bold" placeholder="e.g. Toyota Hilux Front Brake Pads (Japan)" required>
                             </div>
-                            <div class="col-md-8 mb-3">
-                                <label class="form-label fw-bold">Buying Price (Cost)</label>
-                                <input type="number" name="buying_price" class="form-control p-3 bg-light border-0" placeholder="UGX" required>
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold">Category</label>
+                                <select name="category" class="form-select form-control-pro form-select-lg">
+                                    <option value="">-- Choose Category --</option>
+                                    {% for cat in categories %}
+                                        <option value="{{ cat.id }}">{{ cat.name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold">Hardware Photo</label>
+                                <input type="file" name="photo" id="photoInput" class="form-control form-control-pro" accept="image/*">
                             </div>
                         </div>
 
-                        <div class="row">
-                            <div class="col-md-6 mb-3">
+                        <span class="section-label">2. Inventory & Pricing (UGX)</span>
+                        <div class="row g-4 mb-5">
+                            <div class="col-md-3">
+                                <label class="form-label fw-bold">Initial Qty</label>
+                                <input type="number" name="quantity" class="form-control form-control-pro form-control-lg text-center fw-black" value="0" required>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label fw-bold">Cost Price (Buying)</label>
+                                <input type="number" name="cost_price" class="form-control form-control-pro form-control-lg" placeholder="0" required>
+                            </div>
+                            <div class="col-md-5">
                                 <label class="form-label fw-bold text-success">Standard Selling Price</label>
-                                <input type="number" name="selling_price" class="form-control p-3 bg-light border-0" placeholder="UGX" required>
-                            </div>
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label fw-bold text-danger">Minimum Price (Floor)</label>
-                                <input type="number" name="min_price" class="form-control p-3 bg-light border-0" placeholder="UGX" required>
+                                <input type="number" name="selling_price" class="form-control form-control-pro form-control-lg selling-price-input fw-black" placeholder="0" required>
                             </div>
                         </div>
 
-                        <div class="d-flex gap-2 mt-4">
-                            <button type="submit" class="btn btn-primary w-100 py-3 fw-bold">SAVE TO INVENTORY</button>
-                            <a href="{% url 'inventory' %}" class="btn btn-light w-50 py-3">CANCEL</a>
+                        <span class="section-label">3. Origin & Storage</span>
+                        <div class="row g-4 mb-5">
+                            <div class="col-md-4">
+                                <label class="form-label fw-bold">Shelf/Location</label>
+                                <input type="text" name="location" class="form-control form-control-pro" placeholder="e.g. Shelf B4">
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label fw-bold">Country of Origin</label>
+                                <input type="text" name="origin" class="form-control form-control-pro" placeholder="e.g. Germany">
+                            </div>
+                            <div class="col-md-4 d-flex align-items-center">
+                                <div class="form-check form-switch mt-3">
+                                    <input class="form-check-input" type="checkbox" name="is_fixed_price" id="fixedToggle" checked style="width: 2.5em; height: 1.25em;">
+                                    <label class="form-check-label fw-bold ms-2" for="fixedToggle">Non-Negotiable</label>
+                                </div>
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label fw-bold">Technical Specs / Description</label>
+                                <textarea name="description" class="form-control form-control-pro" rows="3" placeholder="Enter OEM numbers, compatibility, or dimensions..."></textarea>
+                            </div>
+                        </div>
+
+                        <div class="d-flex flex-column flex-md-row gap-3 pt-4 border-top">
+                            <button type="submit" class="btn btn-primary btn-lg px-5 py-3 fw-black rounded-3 shadow">
+                                <i class="fas fa-cloud-upload-alt me-2"></i>ADD TO STOCK
+                            </button>
+                            <a href="{% url 'inventory' %}" class="btn btn-outline-secondary btn-lg px-5 py-3 rounded-3">
+                                DISCARD
+                            </a>
                         </div>
                     </form>
                 </div>
@@ -48,4 +160,21 @@
         </div>
     </div>
 </div>
+
+<script>
+    // Visual feedback for the price check
+    const cost = document.querySelector('input[name="cost_price"]');
+    const sell = document.querySelector('input[name="selling_price"]');
+
+    function checkProfit() {
+        if (parseFloat(sell.value) < parseFloat(cost.value)) {
+            sell.style.borderColor = "#ef4444"; // Red if selling below cost
+        } else {
+            sell.style.borderColor = "#10b981"; // Green if profitable
+        }
+    }
+
+    cost.addEventListener('input', checkProfit);
+    sell.addEventListener('input', checkProfit);
+</script>
 {% endblock %}

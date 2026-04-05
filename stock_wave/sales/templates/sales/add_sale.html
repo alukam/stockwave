@@ -1,152 +1,273 @@
 {% extends 'base.html' %}
 {% block content %}
 <style>
-    .pos-card {
-        background: #ffffff;
-        border: none;
-        border-radius: 20px;
-        box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+    :root {
+        --pos-primary: #3b82f6;
+        --neon-blue: #38bdf8;
     }
-    .input-group-text { background: transparent; border-right: none; color: #6c757d; }
-    .form-control, .form-select { 
-        border-left: none; 
-        padding: 12px; 
-        border-radius: 0 10px 10px 0; 
+
+    /* Full-Screen Workspace */
+    .pos-wrapper {
+        display: grid;
+        grid-template-columns: 1fr 450px;
+        height: calc(100vh - 100px);
+        margin: -40px; 
+        background: var(--bs-tertiary-bg);
     }
-    .form-control:focus { box-shadow: none; border-color: #dee2e6; }
-    .label-pos { font-weight: 600; color: #495057; font-size: 0.9rem; margin-bottom: 8px; display: block; }
-    .total-display-box {
-        background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-        border-radius: 15px;
-        padding: 25px;
-        border: 1px dashed #dee2e6;
+
+    /* LEFT: Inventory Engine */
+    .inventory-engine {
+        background: var(--bs-body-bg);
+        border-right: 1px solid var(--bs-border-color);
+        display: flex;
+        flex-direction: column;
+        padding: 20px;
+        overflow: hidden;
     }
-    .btn-confirm {
-        background: #2c3e50;
-        color: white;
+
+    .search-dock {
+        background: var(--bs-secondary-bg);
+        border: 1px solid var(--bs-border-color);
         border-radius: 12px;
-        font-weight: 600;
-        transition: all 0.3s;
-        border: none;
+        padding: 10px 20px;
+        display: flex;
+        align-items: center;
+        margin-bottom: 20px;
     }
-    .btn-confirm:hover { background: #1a252f; transform: translateY(-2px); color: white; }
-    /* Visual indicator for stock */
-    .stock-badge { font-size: 0.75rem; padding: 4px 8px; border-radius: 6px; }
+
+    .search-dock input {
+        background: transparent;
+        border: none;
+        color: var(--bs-body-color);
+        width: 100%;
+        font-size: 1.1rem;
+        outline: none;
+    }
+
+    .part-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+        gap: 12px;
+        overflow-y: auto;
+        padding-bottom: 20px;
+    }
+
+    .part-tile {
+        background: var(--bs-secondary-bg);
+        border: 1px solid var(--bs-border-color);
+        border-radius: 12px;
+        padding: 15px;
+        cursor: pointer;
+        transition: 0.2s;
+        position: relative;
+    }
+
+    .part-tile:hover {
+        border-color: var(--pos-primary);
+        background: rgba(59, 130, 246, 0.05);
+        transform: translateY(-2px);
+    }
+
+    /* Fix: Text color for product names in tiles */
+    .part-name {
+        color: var(--bs-body-color);
+        font-weight: 700;
+        font-size: 0.9rem;
+    }
+
+    .stock-indicator {
+        position: absolute;
+        top: 8px;
+        right: 8px;
+        font-size: 0.65rem;
+        font-weight: 800;
+        color: var(--pos-primary);
+        text-transform: uppercase;
+    }
+
+    /* RIGHT: Transaction Blade */
+    .transaction-blade {
+        background: var(--bs-body-bg);
+        color: var(--bs-body-color);
+        display: flex;
+        flex-direction: column;
+        box-shadow: -10px 0 30px rgba(0,0,0,0.1);
+        border-left: 1px solid var(--bs-border-color);
+    }
+
+    .receipt-header {
+        padding: 25px 30px;
+        background: var(--bs-secondary-bg);
+        border-bottom: 1px solid var(--bs-border-color);
+    }
+
+    .active-item-box { padding: 30px; flex-grow: 1; overflow-y: auto; }
+
+    /* Numpad Styling */
+    .numpad {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 10px;
+        margin-top: 20px;
+    }
+
+    .num-btn {
+        padding: 12px;
+        border: 1px solid var(--bs-border-color);
+        background: var(--bs-secondary-bg);
+        color: var(--bs-body-color);
+        border-radius: 8px;
+        font-weight: 700;
+        transition: 0.1s;
+    }
+    
+    .num-btn:active { background: var(--pos-primary); color: white; }
+
+    .total-bill {
+        background: #0f172a; /* Professional Receipt Look */
+        color: white;
+        padding: 30px;
+        border-radius: 30px 30px 0 0;
+    }
+
+    .btn-finalize {
+        background: var(--pos-primary);
+        color: white;
+        border: none;
+        width: 100%;
+        padding: 18px;
+        border-radius: 12px;
+        font-weight: 800;
+        text-transform: uppercase;
+        margin-top: 15px;
+        transition: 0.2s;
+    }
+
+    .btn-finalize:hover { background: #2563eb; transform: scale(1.01); }
+
+    /* Input Overrides for Dark Mode */
+    .form-control-lg {
+        background-color: var(--bs-secondary-bg) !important;
+        color: var(--bs-body-color) !important;
+        border: 2px solid var(--bs-border-color) !important;
+    }
 </style>
 
-<div class="container py-5">
-    <div class="row justify-content-center">
-        <div class="col-lg-7">
-            <div class="pos-card p-4 p-md-5">
-                <div class="text-center mb-4">
-                    <div class="d-inline-block p-3 bg-light rounded-circle mb-3">
-                        <i class="fas fa-cash-register fa-2x text-primary"></i>
-                    </div>
-                    <h3 class="fw-bold">Create New Receipt</h3>
-                    <p class="text-muted">Fill in transaction details below</p>
-                </div>
+<div class="pos-wrapper">
+    <div class="inventory-engine">
+        <div class="search-dock">
+            <i class="fas fa-search me-3 text-muted"></i>
+            <input type="text" id="engineSearch" placeholder="SEARCH SPARE PARTS...">
+        </div>
 
-                <form method="POST" id="saleForm">
-                    {% csrf_token %}
-                    
-                    <div class="mb-4">
-                        <label class="label-pos"><i class="fas fa-tag me-2"></i>Product / Spare Part</label>
-                        <div class="input-group">
-                            <span class="input-group-text"><i class="fas fa-search"></i></span>
-                            <select name="product" id="product_select" class="form-select select2" required>
-                                <option value="" selected disabled>Type to search parts...</option>
-                                {% for p in products %}
-                                <option value="{{ p.id }}" 
-                                        data-price="{{ p.selling_price }}" 
-                                        data-min="{{ p.min_price }}"
-                                        data-stock="{{ p.quantity }}">
-                                    {{ p.name }} ({{ p.quantity }} in stock)
-                                </option>
-                                {% endfor %}
-                            </select>
-                        </div>
-                    </div>
-
-                    <div class="row">
-                        <div class="col-md-5 mb-4">
-                            <label class="label-pos"><i class="fas fa-calculator me-2"></i>Qty</label>
-                            <div class="input-group">
-                                <span class="input-group-text"><i class="fas fa-layer-group"></i></span>
-                                <input type="number" name="quantity" id="qty" class="form-control" value="1" min="1">
-                            </div>
-                        </div>
-                        
-                        <div class="col-md-7 mb-4">
-                            <label class="label-pos"><i class="fas fa-hand-holding-usd me-2"></i>Price (UGX)</label>
-                            <div class="input-group">
-                                <span class="input-group-text">UGX</span>
-                                <input type="number" name="negotiated_price" id="price" class="form-control" placeholder="0.00">
-                            </div>
-                            <small id="price_hint" class="text-muted mt-1 d-block"></small>
-                        </div>
-                    </div>
-
-                    <div class="total-display-box text-center mb-4">
-                        <span class="text-uppercase tracking-wider small text-muted d-block mb-1">Grand Total Amount</span>
-                        <div class="d-flex justify-content-center align-items-baseline">
-                            <span id="live_total" class="display-5 fw-bold text-primary">0</span>
-                            <span class="ms-2 h4 text-primary">UGX</span>
-                        </div>
-                    </div>
-
-                    <button type="submit" class="btn btn-confirm w-100 py-3 shadow-sm">
-                        <i class="fas fa-check-circle me-2"></i> COMPLETE SALE
-                    </button>
-                </form>
+        <div class="part-grid" id="grid">
+            {% for p in products %}
+            <div class="part-tile" onclick="mount('{{ p.id }}', '{{ p.name }}', {{ p.selling_price }}, {{ p.min_price }})">
+                <span class="stock-indicator">{{ p.quantity }} IN STOCK</span>
+                <div class="text-muted small mb-1">SKU-{{ p.id|add:1000 }}</div>
+                <div class="part-name">{{ p.name|truncatechars:25 }}</div>
+                <div class="text-info mt-2 fw-bold small">{{ p.selling_price }} UGX</div>
             </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <div class="transaction-blade">
+        <div class="receipt-header d-flex justify-content-between align-items-center">
+            <div>
+                <h5 class="fw-bold mb-0">ORDER TERMINAL</h5>
+                <small class="text-muted">READY TO BIll</small>
+            </div>
+            <span class="badge bg-success-subtle text-success rounded-pill px-3">Online</span>
+        </div>
+
+        <form method="POST" id="mainForm" class="active-item-box">
+            {% csrf_token %}
+            <input type="hidden" name="product" id="selected_id">
+            
+            <div class="mb-4">
+                <label class="small fw-bold text-muted text-uppercase mb-2 d-block">Selected Item</label>
+                <h3 id="display_name" class="fw-bold text-primary">SELECT A PART...</h3>
+            </div>
+
+            <div class="row g-3">
+                <div class="col-6">
+                    <label class="small fw-bold text-muted mb-2 d-block">QUANTITY</label>
+                    <input type="number" name="quantity" id="qty" class="form-control form-control-lg fw-bold" value="1" min="1">
+                </div>
+                <div class="col-6">
+                    <label class="small fw-bold text-muted mb-2 d-block">PRICE (UGX)</label>
+                    <input type="number" name="negotiated_price" id="price" class="form-control form-control-lg fw-bold">
+                </div>
+            </div>
+
+            <div class="numpad">
+                <button type="button" class="num-btn" onclick="addQty(1)">+1</button>
+                <button type="button" class="num-btn" onclick="addQty(5)">+5</button>
+                <button type="button" class="num-btn" onclick="addQty(10)">+10</button>
+            </div>
+            
+            <div id="warn" class="alert alert-warning mt-4 py-2 small d-none">
+                <i class="fas fa-exclamation-triangle me-2"></i> Price is below minimum threshold!
+            </div>
+        </form>
+
+        <div class="total-bill">
+            <div class="d-flex justify-content-between mb-2 small opacity-75">
+                <span>Transaction ID</span>
+                <span>#{{ now|date:"His" }}</span>
+            </div>
+            <div class="d-flex justify-content-between align-items-end">
+                <h5 class="mb-0 fw-bold">TOTAL DUE</h5>
+                <h2 class="mb-0 fw-bold text-info" id="total_render">0 UGX</h2>
+            </div>
+            <button type="submit" form="mainForm" class="btn-finalize shadow-lg">
+                FINALIZE TRANSACTION
+            </button>
         </div>
     </div>
 </div>
 
 <script>
-const productSelect = document.getElementById('product_select');
-const qtyInput = document.getElementById('qty');
-const priceInput = document.getElementById('price');
-const totalDisplay = document.getElementById('live_total');
-const priceHint = document.getElementById('price_hint');
+let minLimit = 0;
 
-// 1. Auto-fill Price when Product is selected
-productSelect.addEventListener('change', function() {
-    const selectedOption = this.options[this.selectedIndex];
-    const defaultPrice = selectedOption.getAttribute('data-price');
-    const minPrice = selectedOption.getAttribute('data-min');
+function mount(id, name, price, min) {
+    document.getElementById('selected_id').value = id;
+    document.getElementById('display_name').innerText = name.toUpperCase();
+    document.getElementById('price').value = price;
+    minLimit = min;
+    sync();
+}
+
+function addQty(amt) {
+    let q = document.getElementById('qty');
+    q.value = parseInt(q.value || 0) + amt;
+    sync();
+}
+
+function sync() {
+    let q = parseFloat(document.getElementById('qty').value || 0);
+    let p = parseFloat(document.getElementById('price').value || 0);
+    let total = q * p;
     
-    priceInput.value = defaultPrice;
-    priceHint.innerHTML = `<i class="fas fa-info-circle"></i> Recommended: ${Number(defaultPrice).toLocaleString()} | Min: ${Number(minPrice).toLocaleString()}`;
-    calculate();
-});
-
-// 2. Real-time Calculation & Bargain Alert
-function calculate() {
-    const selectedOption = productSelect.options[productSelect.selectedIndex];
-    if (!selectedOption.value) return;
-
-    const minPrice = parseFloat(selectedOption.getAttribute('data-min'));
-    const userPrice = parseFloat(priceInput.value || 0);
-    const qty = parseFloat(qtyInput.value || 0);
+    document.getElementById('total_render').innerText = total.toLocaleString() + ' UGX';
     
-    // Calculate Total
-    let total = qty * userPrice;
-    totalDisplay.innerText = total.toLocaleString();
-
-    // Visual Bargain Warning
-    if (userPrice < minPrice) {
-        priceInput.style.borderColor = "#dc3545";
-        priceInput.style.color = "#dc3545";
-        totalDisplay.classList.replace('text-primary', 'text-danger');
+    const w = document.getElementById('warn');
+    if (p < minLimit && p > 0) {
+        w.classList.remove('d-none');
     } else {
-        priceInput.style.borderColor = "#dee2e6";
-        priceInput.style.color = "#212529";
-        totalDisplay.classList.replace('text-danger', 'text-primary');
+        w.classList.add('d-none');
     }
 }
 
-qtyInput.addEventListener('input', calculate);
-priceInput.addEventListener('input', calculate);
+document.getElementById('engineSearch').addEventListener('input', function(e) {
+    const term = e.target.value.toLowerCase();
+    document.querySelectorAll('.part-tile').forEach(t => {
+        t.style.display = t.innerText.toLowerCase().includes(term) ? 'block' : 'none';
+    });
+});
+
+document.getElementById('qty').addEventListener('input', sync);
+document.getElementById('price').addEventListener('input', sync);
 </script>
 {% endblock %}

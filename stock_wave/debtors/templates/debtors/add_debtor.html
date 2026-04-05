@@ -1,52 +1,139 @@
 {% extends 'base.html' %}
+{% load humanize %}
+
+{% block extra_css %}
+<style>
+    /* Consistent Stockwave Styling */
+    .debt-card {
+        background: var(--bs-body-bg);
+        border: 1px solid var(--bs-border-color);
+        border-radius: 16px;
+        overflow: hidden;
+    }
+
+    .debt-header {
+        background: #0f172a; /* POS Deep Slate */
+        color: white;
+        padding: 1.5rem;
+    }
+
+    .st-input {
+        background-color: var(--bs-tertiary-bg) !important;
+        color: var(--bs-emphasis-color) !important;
+        border: 1px solid var(--bs-border-color) !important;
+        padding: 12px 15px;
+        border-radius: 10px;
+        font-weight: 600;
+        transition: 0.2s ease;
+    }
+
+    .st-input:focus {
+        border-color: var(--accent-color) !important;
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    }
+
+    /* Select specific styling */
+    .st-select {
+        cursor: pointer;
+        appearance: none;
+        background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23343a40' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='m2 5 6 6 6-6'/%3e%3c/svg%3e");
+        background-repeat: no-repeat;
+        background-position: right 1rem center;
+        background-size: 16px 12px;
+    }
+
+    .btn-save-debt {
+        background: var(--accent-color);
+        color: white;
+        border: none;
+        padding: 15px;
+        font-weight: 800;
+        text-transform: uppercase;
+        border-radius: 12px;
+        transition: 0.3s;
+    }
+
+    .btn-save-debt:hover {
+        background: #2563eb;
+        transform: translateY(-2px);
+    }
+</style>
+{% endblock %}
 
 {% block content %}
-<div class="container py-4">
+<div class="container py-5">
     <div class="row justify-content-center">
-        <div class="col-md-6">
-            <div class="glass-card p-4 shadow-sm">
-                <h4 class="fw-bold mb-4"><i class="fas fa-user-plus me-2"></i>Record New Debt</h4>
+        <div class="col-lg-6 col-md-8">
+            
+            <div class="debt-card shadow-lg">
+                <div class="debt-header d-flex justify-content-between align-items-center">
+                    <div>
+                        <h4 class="fw-black mb-0"><i class="fas fa-file-invoice-dollar me-2 text-info"></i>New Debt Entry</h4>
+                        <small class="opacity-50 text-uppercase letter-spacing-1">Outflow & Inventory Sync</small>
+                    </div>
+                    <i class="fas fa-user-clock fa-2x opacity-25"></i>
+                </div>
+
+                <div class="card-body p-4 p-md-5">
+                    <form method="POST">
+                        {% csrf_token %}
+                        
+                        <div class="row mb-4">
+                            <div class="col-md-7">
+                                <label class="small fw-bold text-muted mb-2">CUSTOMER NAME</label>
+                                <input type="text" name="name" class="form-control st-input" placeholder="Enter Full Name" required>
+                            </div>
+                            <div class="col-md-5">
+                                <label class="small fw-bold text-muted mb-2">PHONE (07...)</label>
+                                <input type="text" name="phone" class="form-control st-input" placeholder="Optional">
+                            </div>
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="small fw-bold text-muted mb-2">SELECT PRODUCT TAKEN</label>
+                            <select name="product" class="form-select st-input st-select" required>
+                                <option value="" selected disabled>Choose from inventory...</option>
+                                {% for p in products %}
+                                <option value="{{ p.id }}">
+                                    {{ p.name|upper }} — (Current Stock: {{ p.quantity }})
+                                </option>
+                                {% endfor %}
+                            </select>
+                            <div class="form-text small mt-2">
+                                <i class="fas fa-info-circle me-1"></i> Stock will be automatically deducted upon saving.
+                            </div>
+                        </div>
+
+                        <div class="row mb-5">
+                            <div class="col-6">
+                                <label class="small fw-bold text-muted mb-2">QUANTITY</label>
+                                <input type="number" name="quantity" class="form-control st-input text-center" value="1" min="1" required>
+                            </div>
+                            <div class="col-6">
+                                <label class="small fw-bold text-muted mb-2">TOTAL VALUE (UGX)</label>
+                                <input type="number" name="total_amount" class="form-control st-input fw-black text-danger" placeholder="0" required>
+                            </div>
+                        </div>
+
+                        <div class="d-grid gap-3">
+                            <button type="submit" class="btn-save-debt shadow">
+                                <i class="fas fa-check-double me-2"></i> Finalize & Record Debt
+                            </button>
+                            <a href="{% url 'debtor_list' %}" class="btn btn-link text-muted fw-bold text-decoration-none py-2">
+                                <i class="fas fa-times me-1"></i> Discard Entry
+                            </a>
+                        </div>
+                    </form>
+                </div>
                 
-                <form method="POST">
-                    {% csrf_token %}
-                    
-                    <div class="mb-3">
-                        <label class="form-label fw-bold">Customer Name</label>
-                        <input type="text" name="name" class="form-control" placeholder="e.g. John Doe" required>
-                    </div>
-
-                    <div class="mb-3">
-                        <label class="form-label fw-bold">Phone Number</label>
-                        <input type="text" name="phone" class="form-control" placeholder="07...">
-                    </div>
-
-                    <div class="mb-3">
-                        <label class="form-label fw-bold">Product Taken</label>
-                        <select name="product" class="form-select" required>
-                            <option value="">Select Product...</option>
-                            {% for p in products %}
-                            <option value="{{ p.id }}">{{ p.name }} (Stock: {{ p.quantity }})</option>
-                            {% endfor %}
-                        </select>
-                    </div>
-
-                    <div class="row">
-                        <div class="col-6 mb-3">
-                            <label class="form-label fw-bold">Quantity</label>
-                            <input type="number" name="quantity" class="form-control" value="1" min="1" required>
-                        </div>
-                        <div class="col-6 mb-3">
-                            <label class="form-label fw-bold">Total Debt (UGX)</label>
-                            <input type="number" name="total_amount" class="form-control" placeholder="e.g. 50000" required>
-                        </div>
-                    </div>
-
-                    <div class="d-grid gap-2 mt-3">
-                        <button type="submit" class="btn btn-primary fw-bold py-2">Save Debt & Update Stock</button>
-                        <a href="{% url 'debtor_list' %}" class="btn btn-light">Cancel</a>
-                    </div>
-                </form>
+                <div class="bg-light p-3 border-top text-center">
+                    <span class="small text-muted fw-bold">
+                        <i class="fas fa-shield-alt me-1"></i> This transaction will be logged under Admin: 
+                        <span class="text-primary">{{ user.username|upper }}</span>
+                    </span>
+                </div>
             </div>
+
         </div>
     </div>
 </div>

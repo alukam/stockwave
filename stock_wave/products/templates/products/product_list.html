@@ -1,40 +1,156 @@
 {% extends 'base.html' %}
+{% load static %}
 {% load humanize %}
 
+{% block extra_css %}
+<style>
+    .table thead th {
+        font-weight: 600;
+        font-size: 0.85rem;
+        text-transform: uppercase;
+        letter-spacing: 0.02em;
+        background-color: var(--bs-tertiary-bg) !important; 
+        color: var(--bs-secondary-color) !important;
+        border-bottom: 2px solid var(--bs-border-color);
+    }
+    .product-title { color: var(--bs-emphasis-color) !important; }
+    [data-bs-theme="dark"] .glass-card {
+        background: rgba(30, 41, 59, 0.7);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    .product-img-thumbnail { transition: transform 0.2s; border: 1px solid var(--bs-border-color); }
+    .status-dot { height: 8px; width: 8px; border-radius: 50%; display: inline-block; margin-right: 5px; }
+</style>
+{% endblock %}
+
 {% block content %}
-<div class="d-flex justify-content-between align-items-center mb-4">
-    <h2><i class="fas fa-boxes text-primary"></i> Inventory Stock</h2>
-    <a href="{% url 'add_product' %}" class="btn btn-primary">
-        <i class="fas fa-plus"></i> Add New Stock
-    </a>
+<div class="row align-items-center mb-4">
+    <div class="col-md-6">
+        <h2 class="h3 mb-0 fw-bold text-dark">
+            <i class="fas fa-boxes text-primary me-2"></i>Inventory Stock
+        </h2>
+        <p class="text-muted small mb-0">Manage and track your spare parts availability.</p>
+    </div>
+    
+    {% if user.is_superuser %}
+    <div class="col-md-6 text-md-end mt-3 mt-md-0">
+        <a href="{% url 'add_product' %}" class="btn btn-primary px-4 shadow-sm fw-bold">
+            <i class="fas fa-plus me-2"></i>ADD NEW PART
+        </a>
+    </div>
+    {% endif %}
 </div>
 
-<div class="card shadow-sm">
+<div class="card glass-card border-0 mb-4">
+    <div class="card-body p-3">
+        <form method="GET" action="" class="row g-2">
+            <div class="col-md-10">
+                <div class="input-group">
+                    <span class="input-group-text bg-transparent border-end-0"><i class="fas fa-search text-muted"></i></span>
+                    <input type="text" name="q" class="form-control border-start-0 ps-0" placeholder="Search by part name, category or origin...">
+                </div>
+            </div>
+            <div class="col-md-2">
+                <button type="submit" class="btn btn-outline-primary w-100 fw-semibold">Filter</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="card shadow-sm border-0 glass-card">
     <div class="table-responsive">
         <table class="table table-hover align-middle mb-0">
-            <thead class="table-dark">
+            <thead>
                 <tr>
-                    <th>Part Name</th>
-                    <th>Current Stock</th>
-                    <th>Selling Price (UGX)</th>
-                    <th>Min Price (Bargain Floor)</th>
-                    <th>Status</th>
+                    <th class="ps-4">Photo</th>
+                    <th>Part Details</th>
+                    <th>Source & Location</th>
+                    
+                    {% if user.is_superuser %}
+                    <th class="text-end">Cost Price</th>
+                    {% endif %}
+
+                    <th class="text-end">Selling Price</th>
+                    <th class="text-center">Stock Level</th>
+
+                    {% if user.is_superuser %}
+                    <th class="text-center">Actions</th>
+                    {% endif %}
                 </tr>
             </thead>
             <tbody>
                 {% for item in items %}
                 <tr>
-                    <td><strong>{{ item.name }}</strong></td>
-                    <td>{{ item.quantity }} pcs</td>
-                    <td>{{ item.selling_price|intcomma }}</td>
-                    <td class="text-danger">{{ item.min_price|intcomma }}</td>
-                    <td>
-                        {% if item.quantity > 5 %}
-                            <span class="badge bg-success">In Stock</span>
-                        {% elif item.quantity > 0 %}
-                            <span class="badge bg-warning text-dark">Low Stock</span>
+                    <td class="ps-4">
+                        {% if item.photo %}
+                            <img src="{{ item.photo.url }}" class="product-img-thumbnail rounded-3 shadow-sm" style="width: 48px; height: 48px; object-fit: cover;">
                         {% else %}
-                            <span class="badge bg-danger">Out of Stock</span>
+                            <div class="bg-light rounded-3 text-center border" style="width: 48px; height: 48px; line-height: 48px;">
+                                <i class="fas fa-tools text-muted"></i>
+                            </div>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <div class="fw-bold text-body-emphasis mb-0">{{ item.name }}</div>
+                        <span class="badge rounded-pill bg-primary-subtle text-primary" style="font-size: 0.7rem;">
+                            {{ item.category.name|default:"Uncategorized" }}
+                        </span>
+                    </td>
+                    <td>
+                        <div class="small fw-semibold"><i class="fas fa-map-marker-alt text-muted me-1"></i> {{ item.location }}</div>
+                        <div class="small text-muted"><i class="fas fa-globe me-1"></i> {{ item.origin }}</div>
+                    </td>
+
+                    {% if user.is_superuser %}
+                    <td class="text-end text-muted small">
+                        {{ item.cost_price|intcomma }} <small>UGX</small>
+                    </td>
+                    {% endif %}
+
+                    <td class="text-end fw-bold text-dark">
+                        {{ item.selling_price|intcomma }} <small class="text-muted fw-normal">UGX</small>
+                        {% if not item.is_fixed_price %}
+                            <i class="fas fa-handshake text-warning ms-1" data-bs-toggle="tooltip" title="Negotiable"></i>
+                        {% endif %}
+                    </td>
+                    <td class="text-center">
+                        <div class="fw-bold mb-1">{{ item.quantity }} pcs</div>
+                        {% if item.quantity > 5 %}
+                            <span class="badge bg-success-subtle text-success border border-success-subtle">
+                                <span class="status-dot bg-success"></span>In Stock
+                            </span>
+                        {% elif item.quantity > 0 %}
+                            <span class="badge bg-warning-subtle text-warning border border-warning-subtle">
+                                <span class="status-dot bg-warning"></span>Low Stock
+                            </span>
+                        {% else %}
+                            <span class="badge bg-danger-subtle text-danger border border-danger-subtle">
+                                <span class="status-dot bg-danger"></span>Out of Stock
+                            </span>
+                        {% endif %}
+                    </td>
+
+                    {% if user.is_superuser %}
+                    <td class="text-center">
+                        <div class="btn-group shadow-sm">
+                            <a href="{% url 'edit_product' item.id %}" class="btn btn-sm btn-light border" title="Edit">
+                                <i class="fas fa-edit text-primary"></i>
+                            </a>
+                            <a href="{% url 'delete_product' item.id %}" class="btn btn-sm btn-light border" 
+                               onclick="return confirm('Delete this part from inventory?')" title="Delete">
+                                <i class="fas fa-trash text-danger"></i>
+                            </a>
+                        </div>
+                    </td>
+                    {% endif %}
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="7" class="text-center py-5">
+                        <img src="https://cdn-icons-png.flaticon.com/512/4076/4076432.png" style="width: 80px; opacity: 0.2;" class="mb-3">
+                        <p class="text-muted">No items found in your inventory list.</p>
+                        {% if user.is_superuser %}
+                        <a href="{% url 'add_product' %}" class="btn btn-sm btn-primary px-4">Add your first part</a>
                         {% endif %}
                     </td>
                 </tr>

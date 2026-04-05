@@ -4,6 +4,13 @@ from decimal import Decimal
 from .models import Debtor, PartialPayment
 from products.models import Product
 
+
+# debtors/views.py
+from django.shortcuts import redirect, get_object_or_404
+from .models import Debtor
+
+
+
 # 1. VIEW ALL DEBTORS
 def debtor_list(request):
     debtors = Debtor.objects.all().order_by('-created_at')
@@ -140,3 +147,32 @@ def delete_debtor(request, debtor_id):
     debtor.delete()
     messages.warning(request, "Debt deleted and items returned to stock.")
     return redirect('debtor_list')
+
+def record_payment(request, debtor_id):
+    debtor = get_object_or_404(Debtor, id=debtor_id)
+    # For now, just a placeholder to stop the 500 error
+    return redirect('admin_management')
+
+def record_payment(request, debtor_id):
+    debtor = get_object_or_404(Debtor, id=debtor_id)
+    
+    if request.method == 'POST':
+        amount = request.POST.get('amount')
+        if amount:
+            amount = int(amount)
+            # 1. Create the payment record
+            PartialPayment.objects.create(
+                debtor=debtor,
+                amount=amount
+            )
+            # 2. Update the debtor's balance logic (assuming your model has this)
+            debtor.balance -= amount
+            if debtor.balance <= 0:
+                debtor.is_paid = True
+                debtor.balance = 0
+            debtor.save()
+            
+            messages.success(request, f"Payment of {amount} UGX recorded for {debtor.name}")
+            return redirect('admin_management')
+            
+    return render(request, 'debtors/record_payment.html', {'debtor': debtor})

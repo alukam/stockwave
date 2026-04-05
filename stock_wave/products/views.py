@@ -1,96 +1,81 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
-from django.db.models import Sum
-from sales.models import Sale 
-from products.models import Product
+from .models import Product
+from categories.models import Category
 from django.contrib.auth.decorators import user_passes_test, login_required
 
 # --- PRODUCT / INVENTORY VIEWS ---
 
-# Only Managers can see the stock list
+
+def edit_product(request, pk): # This name MUST match 'views.edit_product' in urls.py
+    product = get_object_or_404(Product, pk=pk)
+    
+    if request.method == "POST":
+        # Your logic to update the product
+        product.name = request.POST.get('name')
+        product.quantity = request.POST.get('quantity')
+        # ... other fields ...
+        product.save()
+        return redirect('inventory')
+        
+    return render(request, 'products/edit_product.html', {'product': product})
+
+
+
+
 @login_required
-@user_passes_test(lambda u: u.is_superuser)
 def product_list(request):
-    items = Product.objects.all().order_by('name')
+    # select_related('category') is the merged logic for faster loading
+    items = Product.objects.select_related('category').all().order_by('name')
     return render(request, 'products/product_list.html', {'items': items})
 
-# Only Managers can add new stock
+def is_admin(user):
+    return user.is_superuser
+
 @login_required
-@user_passes_test(lambda u: u.is_superuser)
+@user_passes_test(is_admin, login_url='dashboard') # Redirects attendants to dashboard
 def add_product(request):
     if request.method == "POST":
+        # 1. Manual extraction (Preserved from your previous logic)
         name = request.POST.get('name')
         qty = request.POST.get('quantity')
-        b_price = request.POST.get('buying_price')
+        c_price = request.POST.get('cost_price') # Merged: Updated to match new model
         s_price = request.POST.get('selling_price')
-        m_price = request.POST.get('min_price')
-
-        Product.objects.create(
-            name=name,
-            quantity=qty,
-            buying_price=b_price,
-            selling_price=s_price,
-            min_price=m_price
-        )
-        messages.success(request, f"Product {name} added successfully!")
-        return redirect('product_list')
-    
-    return render(request, 'products/add_product.html')
-
-# --- SALES VIEWS ---
-
-@login_required
-def sales_list(request):
-    all_sales = Sale.objects.all().order_by('-timestamp')
-    overall_total = all_sales.aggregate(Sum('total_amount'))['total_amount__sum'] or 0
-    
-    context = {
-        'sales': all_sales,
-        'overall_total': overall_total
-    }
-    return render(request, 'sales/sales_list.html', context)
-
-@login_required
-def create_sale(request):
-    if request.method == "POST":
-        product_id = request.POST.get('product')
-        qty = int(request.POST.get('quantity'))
-        user_price = int(request.POST.get('negotiated_price'))
         
-        product = get_object_or_404(Product, id=product_id)
-
-        if user_price < product.min_price:
-            messages.error(request, f"Price Reject! Minimum allowed is {product.min_price:,} UGX")
-            return redirect('add_sale')
-
-        if product.quantity < qty:
-            messages.error(request, f"Not enough stock! Only {product.quantity} left.")
-            return redirect('add_sale')
-
-        Sale.objects.create(
-            product=product,
-            attendant=request.user,
-            quantity=qty,
-            negotiated_price=user_price
-        )
+        # 2. New Shop Labels (Merged from your requirements)
+        category_id = request.POST.get('category')
+        loc = request.POST.get('location')
+        org = request.POST.get('origin')
+        desc = request.POST.get('description')
         
-        product.quantity -= qty
-        product.save()
-        
-        messages.success(request, f"Sale of {product.name} recorded!")
-        return redirect('sales_list')
+        # 3. Handle the Toggle & Photo (Merged)
+        fixed_price = True if request.POST.get('is_fixed_price') == 'on' else False
+        prod_photo = request.FILES.get('photo') # request.FILES handles the image
 
-    products = Product.objects.filter(quantity__gt=0) # Only show items actually in stock
-    return render(request, 'sales/add_sale.html', {'products': products})
+        try:
+            # Link the category if selected
+            category_obj = Category.objects.get(id=category_id) if category_id else None
+            
+            # 4. Save to Database using the exact Model labels
+            Product.objects.create(
+                name=name,
+                category=category_obj,
+                quantity=qty,
+                cost_price=c_price,
+                selling_price=s_price,
+                location=loc,
+                origin=org,
+                description=desc,
+                photo=prod_photo,
+                is_fixed_price=fixed_price
+            )
+            
+            messages.success(request, f"Product {name} added successfully!")
+            return redirect('inventory')
+            
+        except Exception as e:
+            messages.error(request, f"Could not add product: {e}")
 
-@login_required
-@user_passes_test(lambda u: u.is_superuser) # Only boss can cancel a sale!
-def cancel_sale(request, sale_id):
-    sale = get_object_or_404(Sale, id=sale_id)
-    product = sale.product
-    product.quantity += sale.quantity
-    product.save()
-    sale.delete()
-    
-    messages.warning(request, f"Sale cancelled. Items returned to stock.")
-    return redirect('sales_list')
+    # Pass categories so they appear in your dropdown select
+    categories = Category.objects.all()
+    return render(request, 'products/add_product.html', {'categories': categories})

@@ -1,0 +1,55 @@
+/* --- Responsive Adjustments --- */
+
+/* For Mobile Devices (Phones) */
+@media (max-width: 768px) {
+    /* Hide the table headers on mobile */
+    .responsive-table thead {
+        display: none;
+    }
+
+    /* Force table rows to look like cards */
+    .responsive-table tr {
+        display: block;
+        margin-bottom: 1rem;
+        border: 1px solid #dee2e6;
+        border-radius: 10px;
+        padding: 10px;
+        background: white;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+    }
+
+    /* Make each cell show a label before the data */
+    .responsive-table td {
+        display: flex;
+        justify-content: space-between;
+        padding: 0.5rem 0;
+        border-bottom: 1px dashed #eee;
+        text-align: right;
+    }
+
+    .responsive-table td:last-child {
+        border-bottom: none;
+    }
+
+    /* Add labels for mobile clarity */
+    .responsive-table td::before {
+        content: attr(data-label);
+        font-weight: bold;
+        text-transform: uppercase;
+        font-size: 0.75rem;
+        color: #7f8c8d;
+    }
+
+    /* Adjust image size for mobile */
+    .product-img-thumbnail {
+        width: 80px;
+        height: 80px;
+    }
+}
+
+/* For Desktop/Tablets */
+@media (min-width: 769px) {
+    .glass-card {
+        padding: 2rem;
+    }
+}

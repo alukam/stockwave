@@ -9,4 +9,7 @@ urlpatterns = [
     path('payment/delete/<int:payment_id>/', views.delete_payment, name='delete_payment'),
     path('edit/<int:debtor_id>/', views.edit_debtor, name='edit_debtor'),
     path('delete/<int:debtor_id>/', views.delete_debtor, name='delete_debtor'),
+    path('payment/<int:debtor_id>/', views.record_payment, name='record_payment'),
+    path('', views.debtor_list, name='debtors'), 
+
 ]

@@ -16,6 +16,7 @@ ALLOWED_HOSTS = ['*']
 
 # --- APPS ---
 INSTALLED_APPS = [
+    'categories',
     'debtors',
     'expenses',
     'products',
@@ -72,12 +73,26 @@ WSGI_APPLICATION = 'core.wsgi.application'
 # If it doesn't find one, it falls back to your local PostgreSQL settings.
 
 # Use the Render database URL if it exists, otherwise use local SQLite
+'''''''''
 DATABASES = {
     'default': dj_database_url.config(
         default=f"sqlite:///{os.path.join(BASE_DIR, 'db.sqlite3')}",
         conn_max_age=600
     )
 }
+'''
+# core/settings.py (Local version)
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': 'inventory_db',
+        'USER': 'inventory_users',      # usually 'postgres'
+        'PASSWORD': '2000@2000',
+        'HOST': 'localhost',
+        'PORT': '5432',
+    }
+}
+
 # --- STATIC FILES ---
 STATIC_URL = 'static/'
 STATICFILES_DIRS = [BASE_DIR / 'static']
@@ -90,6 +105,9 @@ STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 LOGIN_URL = '/accounts/login/'
 LOGIN_REDIRECT_URL = '/'
 LOGOUT_REDIRECT_URL = '/accounts/login/'
+LOGIN_URL = 'login'          # Points to the 'name=login' in your urls.py
+LOGIN_REDIRECT_URL = 'dashboard'  # Where to go after success
+LOGOUT_REDIRECT_URL = 'login'     # Where to go after sign out
 # --- MISC ---
 LANGUAGE_CODE = 'en-us'
 TIME_ZONE = 'Africa/Kampala'

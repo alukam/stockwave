@@ -1,86 +1,150 @@
 {% extends 'base.html' %}
 {% load humanize %}
 
+{% block extra_css %}
+<style>
+    /* Use Bootstrap variables for borders and backgrounds */
+    .detail-card { 
+        background-color: var(--bs-body-bg); 
+        border-radius: 20px; 
+        border: 1px solid var(--bs-border-color); 
+        overflow: hidden; 
+    }
+    
+    /* The Header remains dark in both modes for that "Stockwave" branding */
+    .status-header { background: #0f172a; color: #ffffff !important; padding: 2rem; }
+    .status-header h2, .status-header span, .status-header small { color: #ffffff !important; }
+
+    .st-input-group { 
+        background: var(--bs-tertiary-bg); 
+        border-radius: 12px; 
+        padding: 1.5rem; 
+        border: 1px dashed var(--bs-border-color); 
+    }
+    
+    .progress { height: 10px; border-radius: 10px; background-color: rgba(255,255,255,0.1); }
+    .progress-bar { background: linear-gradient(90deg, #3b82f6, #06b6d4); }
+    
+    /* Table Adjustment for Dark Mode */
+    .table-custom thead th { 
+        background: var(--bs-tertiary-bg); 
+        color: var(--bs-secondary-color);
+        text-transform: uppercase; 
+        font-size: 0.7rem; 
+        letter-spacing: 1px;
+    }
+</style>
+{% endblock %}
+
 {% block content %}
-<div class="container py-4">
+<div class="container-fluid py-4">
     <div class="row g-4">
-        <div class="col-md-5">
-            <div class="glass-card p-4 shadow-sm border-top border-4 border-primary">
-                <h4 class="fw-bold mb-1">{{ debtor.name }}</h4>
-                <p class="text-muted mb-4"><i class="fas fa-phone me-2"></i>{{ debtor.phone }}</p>
-
-                <div class="p-3 bg-light rounded mb-3">
-                    <small class="text-muted d-block text-uppercase fw-bold" style="font-size: 0.7rem;">Product Taken</small>
-                    <span class="fw-bold">{{ debtor.product.name }} (x{{ debtor.quantity }})</span>
-                </div>
-
-                <div class="row text-center g-2">
-                    <div class="col-6">
-                        <div class="p-2 border rounded">
-                            <small class="text-muted d-block small">TOTAL DEBT</small>
-                            <span class="fw-bold">{{ debtor.total_amount|intcomma }}</span>
+        
+        <div class="col-lg-5">
+            <div class="detail-card shadow-sm mb-4">
+                <div class="status-header">
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+                        <div>
+                            <h2 class="fw-bold mb-1">{{ debtor.name|upper }}</h2>
+                            <span class="badge bg-info text-dark px-3">{{ debtor.phone }}</span>
+                        </div>
+                        <div class="bg-white bg-opacity-10 p-3 rounded-3 text-center">
+                            <i class="fas fa-file-invoice text-info fa-2x"></i>
                         </div>
                     </div>
-                    <div class="col-6">
-                        <div class="p-2 border rounded">
-                            <small class="text-muted d-block small">PAID SO FAR</small>
-                            <span class="fw-bold text-success">{{ debtor.amount_paid|intcomma }}</span>
+
+                    <div class="mt-4">
+                        <div class="d-flex justify-content-between mb-2 small">
+                            <span class="opacity-75">Repayment Progress</span>
+                            <span class="fw-bold text-info">{{ debtor.payment_percentage }}%</span>
+                        </div>
+                        <div class="progress">
+                            <div class="progress-bar" role="progressbar" style="width: {{ debtor.payment_percentage }}%"></div>
                         </div>
                     </div>
                 </div>
 
-                <div class="mt-4 p-3 bg-danger bg-opacity-10 rounded border border-danger text-center">
-                    <small class="text-danger fw-bold d-block">REMAINING BALANCE</small>
-                    <h3 class="fw-bold text-danger mb-0">{{ debtor.balance|intcomma }} UGX</h3>
-                </div>
-
-                {% if debtor.balance > 0 %}
-                <form method="POST" class="mt-4 pt-4 border-top">
-                    {% csrf_token %}
-                    <label class="form-label fw-bold small">Record Partial Payment</label>
-                    <div class="input-group">
-                        <input type="number" name="amount" class="form-control" placeholder="Amount..." required>
-                        <button type="submit" class="btn btn-success px-4">Pay</button>
+                <div class="card-body p-4">
+                    <div class="p-3 border rounded-4 mb-4 bg-body-tertiary d-flex align-items-center">
+                        <div class="me-3 bg-primary text-white rounded-circle d-flex align-items-center justify-content-center" style="width: 45px; height: 45px;">
+                            <i class="fas fa-box-open"></i>
+                        </div>
+                        <div>
+                            <small class="text-secondary d-block text-uppercase fw-bold" style="font-size: 0.65rem;">Inventory Impact</small>
+                            <span class="fw-bold text-emphasis">{{ debtor.product.name }} <span class="text-primary">x{{ debtor.quantity }}</span></span>
+                        </div>
                     </div>
-                </form>
-                {% else %}
-                <div class="alert alert-success mt-4 text-center py-2">
-                    <i class="fas fa-check-circle me-2"></i> Debt Fully Cleared
+
+                    <div class="row g-3 text-center mb-4">
+                        <div class="col-6">
+                            <div class="p-3 border rounded-4">
+                                <small class="text-secondary d-block mb-1">Total Bill</small>
+                                <span class="fw-bold fs-5 text-emphasis">{{ debtor.total_amount|intcomma }}</span>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="p-3 border rounded-4">
+                                <small class="text-secondary d-block mb-1">Cleared</small>
+                                <span class="fw-bold fs-5 text-success">{{ debtor.amount_paid|intcomma }}</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="p-4 rounded-4 text-center mb-4 border border-danger border-opacity-25 bg-danger bg-opacity-10">
+                        <small class="text-danger fw-bold d-block text-uppercase">Current Balance Due</small>
+                        <h2 class="fw-bold text-danger mb-0">{{ debtor.balance|intcomma }} <small class="fs-6">UGX</small></h2>
+                    </div>
+
+                    {% if debtor.balance > 0 %}
+                    <div class="st-input-group">
+                        <form method="POST">
+                            {% csrf_token %}
+                            <label class="form-label fw-bold small text-secondary text-uppercase mb-3">Installment Payment</label>
+                            <div class="input-group">
+                                <input type="number" name="amount" class="form-control bg-body border-0 p-3 fw-bold text-emphasis" placeholder="Enter Amount..." required>
+                                <button type="submit" class="btn btn-primary px-4 fw-bold">PAY</button>
+                            </div>
+                        </form>
+                    </div>
+                    {% else %}
+                    <div class="p-4 rounded-4 bg-success bg-opacity-10 border border-success border-dashed text-center">
+                        <i class="fas fa-check-circle text-success mb-2 fa-2x"></i>
+                        <h5 class="text-success fw-bold mb-0">ACCOUNT SETTLED</h5>
+                    </div>
+                    {% endif %}
                 </div>
-                {% endif %}
-                
-                <a href="{% url 'debtor_list' %}" class="btn btn-link w-100 mt-3 text-decoration-none text-muted small">
-                    <i class="fas fa-arrow-left me-2"></i> Back to Ledger
-                </a>
             </div>
         </div>
 
-        <div class="col-md-7">
-            <div class="glass-card p-4 shadow-sm h-100">
-                <h5 class="fw-bold mb-4">Payment History</h5>
+        <div class="col-lg-7">
+            <div class="detail-card shadow-sm h-100">
+                <div class="p-4 border-bottom bg-body-tertiary d-flex justify-content-between align-items-center">
+                    <h5 class="fw-bold mb-0 text-emphasis text-uppercase" style="letter-spacing: 1px;">Transaction History</h5>
+                </div>
+                
                 <div class="table-responsive">
-                    <table class="table table-hover align-middle">
-                        <thead class="table-light">
+                    <table class="table table-hover table-custom align-middle mb-0">
+                        <thead>
                             <tr>
-                                <th>Date</th>
+                                <th class="ps-4">Timestamp</th>
                                 <th>Amount Paid</th>
-                                <th class="text-end">Actions</th>
+                                <th class="text-end pe-4">Actions</th>
                             </tr>
                         </thead>
                         <tbody>
                             {% for payment in debtor.payments.all %}
                             <tr>
-                                <td class="small">{{ payment.date|date:"d M Y, h:i A" }}</td>
-                                <td class="text-success fw-bold">+ {{ payment.amount_paid|intcomma }}</td>
-                                <td class="text-end">
-                                    <div class="btn-group">
-                                        <a href="{% url 'edit_payment' payment.id %}" class="btn btn-sm btn-outline-primary border-0" title="Edit">
-                                            <i class="fas fa-edit"></i>
+                                <td class="ps-4">
+                                    <span class="fw-bold d-block text-emphasis">{{ payment.date|date:"H:i A" }}</span>
+                                    <small class="text-secondary">{{ payment.date|date:"d M, Y" }}</small>
+                                </td>
+                                <td><span class="text-success fw-bold">+ {{ payment.amount_paid|intcomma }}</span></td>
+                                <td class="text-end pe-4">
+                                    <div class="btn-group shadow-sm">
+                                        <a href="{% url 'edit_payment' payment.id %}" class="btn btn-sm btn-outline-secondary">
+                                            <i class="fas fa-pen"></i>
                                         </a>
-                                        <a href="{% url 'delete_payment' payment.id %}" 
-                                           class="btn btn-sm btn-outline-danger border-0" 
-                                           title="Delete"
-                                           onclick="return confirm('Wait! Deleting this will increase the balance. Continue?')">
+                                        <a href="{% url 'delete_payment' payment.id %}" class="btn btn-sm btn-outline-danger" onclick="return confirm('Revert payment?')">
                                             <i class="fas fa-trash"></i>
                                         </a>
                                     </div>
@@ -88,9 +152,7 @@
                             </tr>
                             {% empty %}
                             <tr>
-                                <td colspan="3" class="text-center py-5 text-muted">
-                                    No payments recorded yet.
-                                </td>
+                                <td colspan="3" class="text-center py-5 text-secondary">No payments yet.</td>
                             </tr>
                             {% endfor %}
                         </tbody>

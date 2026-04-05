@@ -1,49 +1,133 @@
 {% extends 'base.html' %}
 {% load humanize %}
 
+{% block extra_css %}
+<style>
+    /* Consistent Color Palette */
+    :root {
+        --pos-dark: #0f172a;
+        --pos-border: var(--bs-border-color);
+    }
+
+    /* Clean Card Styling */
+    .st-card {
+        background: var(--bs-body-bg);
+        border: 1px solid var(--pos-border);
+        border-radius: 12px;
+        overflow: hidden;
+    }
+
+    .st-header {
+        background: var(--bs-secondary-bg);
+        padding: 1.2rem;
+        border-bottom: 1px solid var(--pos-border);
+    }
+
+    /* Input Styling - Consistent with your First Page */
+    .st-input {
+        background-color: var(--bs-tertiary-bg) !important;
+        color: var(--bs-emphasis-color) !important;
+        border: 1px solid var(--pos-border) !important;
+        padding: 12px 15px;
+        border-radius: 8px;
+        font-weight: 600;
+    }
+
+    .st-input:focus {
+        border-color: var(--bs-primary) !important;
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    }
+
+    /* The "Receipt" Total Box */
+    .outflow-summary {
+        background: var(--pos-dark);
+        color: #fff;
+        border-radius: 12px;
+        padding: 1.5rem;
+        position: relative;
+    }
+
+    .outflow-summary::after {
+        content: "";
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        height: 4px;
+        background: repeating-linear-gradient(45deg, transparent, transparent 10px, rgba(255,255,255,0.1) 10px, rgba(255,255,255,0.1) 20px);
+    }
+
+    .table-st thead th {
+        background: var(--bs-tertiary-bg);
+        color: var(--bs-secondary-color);
+        font-size: 0.7rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        padding: 12px 20px;
+    }
+
+    .table-st td {
+        padding: 15px 20px;
+        border-bottom: 1px solid var(--pos-border);
+    }
+</style>
+{% endblock %}
+
 {% block content %}
-<div class="container-fluid">
-    <div class="row">
-        <div class="col-md-4">
-            <div class="card shadow-sm border-0 mb-4">
-                <div class="card-header bg-danger text-white p-3">
-                    <h5 class="mb-0"><i class="fas fa-minus-circle me-2"></i>Record Expense</h5>
+<div class="container-fluid py-4">
+    <div class="mb-4">
+        <h2 class="fw-bold text-emphasis mb-1">Expense Terminal</h2>
+        <p class="text-muted small">Manage business outflows and petty cash records.</p>
+    </div>
+
+    <div class="row g-4">
+        <div class="col-lg-4">
+            <div class="st-card shadow-sm mb-4">
+                <div class="st-header">
+                    <h6 class="mb-0 fw-bold"><i class="fas fa-plus-circle text-danger me-2"></i>Record Entry</h6>
                 </div>
                 <div class="card-body p-4">
                     <form method="POST">
                         {% csrf_token %}
                         <div class="mb-3">
-                            <label class="small fw-bold text-muted">Description</label>
-                            <input type="text" name="description" class="form-control p-3 bg-light border-0" placeholder="e.g. Electricity, Lunch, Rent" required>
+                            <label class="small fw-bold text-muted mb-1">DESCRIPTION</label>
+                            <input type="text" name="description" class="form-control st-input" placeholder="e.g. Fuel, Lunch" required>
                         </div>
-                        <div class="mb-3">
-                            <label class="small fw-bold text-muted">Amount (UGX)</label>
-                            <input type="number" name="amount" class="form-control p-3 bg-light border-0" placeholder="0" required>
+                        <div class="mb-4">
+                            <label class="small fw-bold text-muted mb-1">AMOUNT (UGX)</label>
+                            <input type="number" name="amount" class="form-control st-input text-danger fw-bold" style="font-size: 1.2rem;" placeholder="0" required>
                         </div>
-                        <button type="submit" class="btn btn-danger w-100 py-3 fw-bold">SAVE EXPENSE</button>
+                        <button type="submit" class="btn btn-danger w-100 py-2 fw-bold rounded-2 shadow-sm">
+                            SAVE RECORD
+                        </button>
                     </form>
                 </div>
             </div>
 
-            <div class="card bg-dark text-white p-4 shadow">
-                <small class="text-muted">TOTAL OUTFLOW</small>
-                <h2 class="text-danger fw-bold">{{ total_spent|intcomma }} <small>UGX</small></h2>
+            <div class="outflow-summary shadow">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <span class="small fw-bold opacity-75">PERIOD TOTAL</span>
+                    <i class="fas fa-receipt opacity-50"></i>
+                </div>
+                <h2 class="fw-bold mb-0 text-danger">{{ total_spent|intcomma }}</h2>
+                <span class="small opacity-50 fw-bold">UGANDAN SHILLINGS</span>
             </div>
         </div>
 
-        <div class="col-md-8">
-            <div class="card shadow-sm border-0">
-                <div class="p-4 border-bottom bg-white">
-                    <h5 class="mb-0 fw-bold">Recent Expenditures</h5>
+        <div class="col-lg-8">
+            <div class="st-card shadow-sm">
+                <div class="st-header d-flex justify-content-between align-items-center">
+                    <h6 class="mb-0 fw-bold">Recent logs</h6>
+                    <span class="badge bg-danger-subtle text-danger rounded-pill">Daily Audit</span>
                 </div>
                 <div class="table-responsive">
-                    <table class="table table-hover align-middle mb-0">
-                        <thead class="table-light">
+                    <table class="table table-hover table-st mb-0 align-middle">
+                        <thead>
                             <tr>
-                                <th class="ps-4">Date</th>
-                                <th>Description</th>
-                                <th>Amount</th>
-                                <th>Staff</th>
+                                <th class="ps-4">Timestamp</th>
+                                <th>Item Details</th>
+                                <th>Cost</th>
+                                <th>Admin</th>
                                 <th class="text-center">Action</th>
                             </tr>
                         </thead>
@@ -51,20 +135,32 @@
                             {% for e in expenses %}
                             <tr>
                                 <td class="ps-4">
-                                    <small class="text-muted d-block">{{ e.date|date:"d M, Y" }}</small>
-                                    <strong>{{ e.date|date:"H:i A" }}</strong>
+                                    <span class="fw-bold text-emphasis d-block">{{ e.date|date:"H:i A" }}</span>
+                                    <small class="text-muted">{{ e.date|date:"d M, Y" }}</small>
                                 </td>
-                                <td><span class="fw-bold text-dark">{{ e.description }}</span></td>
-                                <td class="text-danger fw-bold">-{{ e.amount|intcomma }}</td>
-                                <td><small class="badge bg-light text-dark">{{ e.user.username }}</small></td>
+                                <td>
+                                    <span class="fw-bold text-emphasis">{{ e.description }}</span>
+                                </td>
+                                <td>
+                                    <span class="text-danger fw-bold">-{{ e.amount|intcomma }}</span>
+                                </td>
+                                <td>
+                                    <span class="badge bg-secondary-subtle text-secondary px-2 py-1">
+                                        {{ e.user.username }}
+                                    </span>
+                                </td>
                                 <td class="text-center">
-                                    <a href="{% url 'cancel_expense' e.id %}" class="btn btn-sm btn-outline-danger rounded-pill px-3" onclick="return confirm('Delete this expense record?')">
-                                        <i class="fas fa-trash-alt"></i>
+                                    <a href="{% url 'cancel_expense' e.id %}" class="text-danger opacity-50 hover-opacity-100" onclick="return confirm('Void record?')">
+                                        <i class="fas fa-times-circle"></i>
                                     </a>
                                 </td>
                             </tr>
                             {% empty %}
-                            <tr><td colspan="5" class="text-center py-5">No expenses recorded yet.</td></tr>
+                            <tr>
+                                <td colspan="5" class="text-center py-5">
+                                    <p class="text-muted mb-0">No entries recorded for today.</p>
+                                </td>
+                            </tr>
                             {% endfor %}
                         </tbody>
                     </table>

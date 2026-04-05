@@ -1,0 +1,169 @@
+{% extends 'base.html' %}
+{% load humanize %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="fw-bold mb-1"><i class="fas fa-user-shield me-2 text-primary"></i>System Control Center</h2>
+            <p class="text-muted small">Comprehensive oversight of users, stock, and finances.</p>
+        </div>
+        <div class="d-flex gap-2">
+            <a href="{% url 'register' %}" class="btn btn-outline-primary fw-bold shadow-sm">
+                <i class="fas fa-user-plus me-2"></i>Register Staff
+            </a>
+            <a href="{% url 'audit_report' %}" class="btn btn-dark fw-bold shadow-sm">
+                <i class="fas fa-file-pdf me-2"></i>Full Business Report
+            </a>
+        </div>
+    </div>
+
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="glass-card p-4 border-start border-primary border-4 shadow-sm bg-primary-subtle">
+                <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
+                    <div>
+                        <h4 class="fw-bold text-primary mb-1">Detailed Financial Audit</h4>
+                        <p class="text-muted mb-0 small">Review deep business analytics and stock valuation in UGX.</p>
+                    </div>
+                    <a href="{% url 'audit_report' %}" class="btn btn-primary btn-lg px-5 shadow fw-bold">
+                        <i class="fas fa-file-invoice-dollar me-2"></i>VIEW AUDIT REPORT
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4 mb-4">
+        <div class="col-md-3">
+            <div class="glass-card p-4 border-start border-4 border-success shadow-sm h-100">
+                <small class="text-muted fw-bold d-block text-uppercase small">Total Profit</small>
+                <h3 class="fw-bold mb-0 text-success">{{ total_profit|intcomma }} <small class="fs-6">UGX</small></h3>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="glass-card p-4 border-start border-4 border-primary shadow-sm h-100">
+                <small class="text-muted fw-bold d-block text-uppercase small">Stock Assets</small>
+                <h3 class="fw-bold mb-0 text-primary">{{ stock_value|intcomma }} <small class="fs-6">UGX</small></h3>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="glass-card p-4 border-start border-4 border-danger shadow-sm h-100">
+                <small class="text-muted fw-bold d-block text-uppercase small">Expenses</small>
+                <h3 class="fw-bold mb-0 text-danger">{{ total_expenses|default:0|intcomma }} <small class="fs-6">UGX</small></h3>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="glass-card p-4 border-start border-4 border-warning shadow-sm h-100">
+                <small class="text-muted fw-bold d-block text-uppercase small">Uncollected Debt</small>
+                <h3 class="fw-bold mb-0 text-warning">{{ total_debts|intcomma }} <small class="fs-6">UGX</small></h3>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="glass-card p-4 shadow-sm">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5 class="fw-bold mb-0"><i class="fas fa-chart-line me-2 text-primary"></i>Weekly Sales Performance</h5>
+                    <span class="badge bg-light text-dark border">UGX Shillings</span>
+                </div>
+                <div style="height: 350px; min-height: 350px; width: 100%;">
+                    <canvas id="salesChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-9">
+            <ul class="nav nav-pills mb-3 gap-2" id="pills-tab" role="tablist">
+                <li class="nav-item">
+                    <button class="nav-link active fw-bold px-4" data-bs-toggle="pill" data-bs-target="#staff">Staff</button>
+                </li>
+                <li class="nav-item">
+                    <button class="nav-link fw-bold px-4" data-bs-toggle="pill" data-bs-target="#inventory">Low Stock</button>
+                </li>
+            </ul>
+
+            <div class="tab-content">
+                <div class="tab-pane fade show active" id="staff">
+                    <div class="glass-card shadow-sm overflow-hidden border-0">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th class="ps-4">Staff Member</th>
+                                    <th>Role</th>
+                                    <th>Status</th>
+                                    <th class="text-end pe-4">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for staff in all_users %}
+                                <tr>
+                                    <td class="ps-4"><strong>{{ staff.username }}</strong></td>
+                                    <td>{% if staff.is_superuser %}Admin{% else %}Staff{% endif %}</td>
+                                    <td><span class="badge {% if staff.is_active %}bg-success{% else %}bg-warning{% endif %}">
+                                        {% if staff.is_active %}Active{% else %}Pending{% endif %}</span>
+                                    </td>
+                                    <td class="text-end pe-4">
+                                        <form action="{% url 'toggle_user' staff.id %}" method="POST">
+                                            {% csrf_token %}<button class="btn btn-sm btn-outline-dark">Toggle</button>
+                                        </form>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-3">
+            <div class="glass-card p-3 shadow-sm border-top border-4 border-primary">
+                <h6 class="fw-bold mb-3">Quick Actions</h6>
+                <div class="d-grid gap-2">
+                    <a href="{% url 'inventory' %}" class="btn btn-light text-start border"><i class="fas fa-boxes me-2 text-primary"></i> Inventory</a>
+                    <a href="{% url 'add_product' %}" class="btn btn-light text-start border"><i class="fas fa-plus-circle me-2 text-success"></i> New Product</a>
+                    <a href="{% url 'sales_management' %}" class="btn btn-light text-start border"><i class="fas fa-plus-circle me-2 text-success"></i>Sales</a>
+                    <a href="{% url 'expense_list' %}" class="btn btn-light text-start border"><i class="fas fa-plus-circle me-2 text-success"></i> Expneses</a>
+                    <a href="{% url 'debtor_list' %}" class="btn btn-light text-start border"><i class="fas fa-plus-circle me-2 text-success"></i> Debtors</a>
+                    <a href="{% url 'admin:index' %}" class="btn btn-dark text-start"><i class="fas fa-cog me-2"></i> Django Backend</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const ctx = document.getElementById('salesChart').getContext('2d');
+        let rawData = '{{ chart_json|safe }}';
+        let chartData = JSON.parse(rawData || '{"labels":[], "totals":[]}');
+
+        new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: chartData.labels,
+                datasets: [{
+                    label: 'Revenue',
+                    data: chartData.totals,
+                    borderColor: '#0d6efd',
+                    backgroundColor: 'rgba(13, 110, 253, 0.1)',
+                    fill: true,
+                    tension: 0.4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: { beginAtZero: true, ticks: { callback: v => v.toLocaleString() } }
+                }
+            }
+        });
+    });
+</script>
+{% endblock %}

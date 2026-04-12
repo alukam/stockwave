@@ -103,11 +103,14 @@ STATIC_ROOT = BASE_DIR / 'staticfiles' # Required for production
 
 # Enable WhiteNoise compression
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+# settings.py
+WHITENOISE_MANIFEST_STRICT = False
 
 # settings.py
-LOGIN_URL = '/accounts/login/'
-LOGIN_REDIRECT_URL = '/'
-LOGOUT_REDIRECT_URL = '/accounts/login/'
+#LOGIN_URL = '/accounts/login/'
+#LOGIN_REDIRECT_URL = '/'
+#LOGOUT_REDIRECT_URL = '/accounts/login/'
+
 LOGIN_URL = 'login'          # Points to the 'name=login' in your urls.py
 LOGIN_REDIRECT_URL = 'dashboard'  # Where to go after success
 LOGOUT_REDIRECT_URL = 'login'     # Where to go after sign out

@@ -73,6 +73,7 @@ DATABASES = {
     )
 }
 
+
 # If we are on Render, force SSL connection parameters for Postgres
 if 'RENDER' in os.environ:
     DATABASES['default']['OPTIONS'] = {'sslmode': 'require'}

@@ -74,17 +74,17 @@ WSGI_APPLICATION = 'core.wsgi.application'
 
 # Use the Render database URL if it exists, otherwise use local SQLite
 
-'''''''''
+
 DATABASES = {
     'default': dj_database_url.config(
         default=f"sqlite:///{os.path.join(BASE_DIR, 'db.sqlite3')}",
         conn_max_age=600
     )
 }
-'''
+
 # core/settings.py (Local version)
 
-
+'''''''''
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
@@ -95,7 +95,7 @@ DATABASES = {
         'PORT': '5432',
     }
 }
-
+'''''
 
 # --- STATIC FILES ---
 STATIC_URL = 'static/'

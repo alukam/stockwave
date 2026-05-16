@@ -1,74 +1,154 @@
 {% extends 'base.html' %}
+{% load humanize %}
+
+{% block extra_css %}
+<style>
+    /* Styling for glass card layouts */
+    .glass-card {
+        background: var(--bs-card-bg);
+        border: 1px solid var(--bs-border-color);
+        border-radius: 12px;
+    }
+    [data-bs-theme="dark"] .glass-card {
+        background: rgba(30, 41, 59, 0.7);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    /* --- MOBILE RESPONSIVE MATRIX (iPhone 8 Breakdown Optimization) --- */
+    @media (max-width: 767.98px) {
+        .responsive-sales-table thead {
+            display: none; /* Strip standard wide horizontal headers */
+        }
+        .responsive-sales-table tbody,
+        .responsive-sales-table tr {
+            display: block;
+            width: 100%;
+        }
+        .responsive-sales-table tr {
+            margin-bottom: 12px;
+            padding: 14px 12px;
+            background: var(--bs-card-bg);
+            border: 1px solid var(--bs-border-color);
+            border-radius: 12px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.03);
+        }
+        .responsive-sales-table td {
+            display: inline-block;
+            padding: 4px 0 !important;
+            border: none !important;
+        }
+
+        /* Responsive Block Helpers */
+        .mobile-row-block { display: block !important; width: 100%; }
+        .mobile-row-inline { display: inline-block !important; }
+        .mobile-right-align { float: right; text-align: right; }
+        
+        .border-bottom-mobile {
+            border-bottom: 1px dashed var(--bs-border-color) !important;
+            padding-bottom: 8px !important;
+            margin-bottom: 8px !important;
+        }
+    }
+</style>
+{% endblock %}
 
 {% block content %}
-<div class="container-fluid">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <div>
-            <h2 class="fw-bold text-body-emphasis">Sales History</h2>
-            <p class="text-muted">View all completed transactions</p>
+<div class="container-fluid px-1 px-sm-3">
+    <!-- Header Block Component -->
+    <div class="row align-items-center g-3 mb-4">
+        <div class="col-10 col-md-7">
+            <h2 class="fw-bold text-body-emphasis h4 h3-md mb-1">Sales History</h2>
+            <p class="text-muted small mb-0 d-none d-sm-block">View all completed transactions</p>
         </div>
-        <div class="glass-card px-4 py-2 border-primary border-start border-4">
-            <small class="text-muted d-block">Total Revenue</small>
-            <span class="fw-bold h4">{{ overall_total }} UGX</span>
+        <div class="col-12 col-md-5 mt-2 mt-md-0 text-md-end">
+            <div class="glass-card px-3 py-2 border-primary border-start border-4 d-inline-block w-100 style-card" style="max-width: 280px;">
+                <small class="text-muted d-block lh-1 mb-1" style="font-size: 0.75rem;">TOTAL REVENUE</small>
+                <span class="fw-bold h5 text-primary">{{ overall_total|intcomma }} <small class="fs-6 fw-normal">UGX</small></span>
+            </div>
         </div>
     </div>
 
-    <div class="glass-card p-3 mb-4">
-        <form method="GET" class="row g-3">
-            <div class="col-md-10">
-                <div class="input-group">
+    <!-- Search Controls -->
+    <div class="glass-card p-2 p-md-3 mb-4">
+        <form method="GET" class="row g-2">
+            <div class="col-9 col-md-10">
+                <div class="input-group input-group-sm input-group-md-lg">
                     <span class="input-group-text bg-transparent border-end-0 text-muted">
                         <i class="fas fa-search"></i>
                     </span>
                     <input type="text" name="q" class="form-control border-start-0 ps-0" 
-                           placeholder="Search by product, attendant, or ID..." value="{{ query|default:'' }}">
+                           placeholder="Search product, attendant, or ID..." value="{{ query|default:'' }}">
                 </div>
             </div>
-            <div class="col-md-2">
-                <button type="submit" class="btn btn-primary w-100 fw-semibold">Filter</button>
+            <div class="col-3 col-md-2">
+                <button type="submit" class="btn btn-sm btn-primary w-100 fw-semibold h-100">Filter</button>
             </div>
         </form>
     </div>
 
-    <div class="glass-card p-0 overflow-hidden">
+    <!-- Sales Table / Flex Ledger -->
+    <div class="glass-card p-0 overflow-hidden border-0 bg-transparent bg-md-card">
         <div class="table-responsive">
-            <table class="table table-hover align-middle mb-0">
+            <table class="table table-hover align-middle mb-0 responsive-sales-table">
                 <thead class="bg-light">
                     <tr>
-                        <th class="ps-4 py-3 text-muted small text-uppercase">ID</th>
+                        <th class="ps-4 py-3 text-muted small text-uppercase" style="width: 90px;">ID</th>
                         <th class="py-3 text-muted small text-uppercase">Date & Time</th>
                         <th class="py-3 text-muted small text-uppercase">Product</th>
                         <th class="py-3 text-muted small text-uppercase">Attendant</th>
-                        <th class="py-3 text-muted small text-uppercase">Qty</th>
-                        <th class="py-3 text-muted small text-uppercase">Price</th>
+                        <th class="py-3 text-muted small text-uppercase text-center">Qty</th>
+                        <th class="py-3 text-muted small text-uppercase text-end">Unit Price</th>
                         <th class="text-end pe-4 py-3 text-muted small text-uppercase">Total Amount</th>
                     </tr>
                 </thead>
                 <tbody>
                     {% for sale in sales %}
                     <tr>
-                        <td class="ps-4 small text-muted">#{{ sale.id }}</td>
-                        <td>
-                            <div class="fw-semibold">{{ sale.timestamp|date:"d M, Y" }}</div>
-                            <small class="text-muted">{{ sale.timestamp|time:"H:i" }}</small>
+                        <!-- column 1: Transaction ID -->
+                        <td class="ps-md-4 small text-muted mobile-row-inline">
+                            <span class="badge bg-body-secondary text-body-tertiary border">#{{ sale.id }}</span>
                         </td>
-                        <td>
-                            <div class="fw-bold text-primary">{{ sale.product.name }}</div>
+
+                        <!-- column 2: Timestamp (Floats Right on mobile view) -->
+                        <td class="mobile-row-inline mobile-right-align">
+                            <div class="fw-semibold small text-body-emphasis d-inline d-md-block">{{ sale.timestamp|date:"d M, Y" }}</div>
+                            <small class="text-muted ms-1 ms-md-0 d-inline d-md-block"><i class="far fa-clock me-1 d-md-none"></i>{{ sale.timestamp|time:"H:i" }}</small>
                         </td>
-                        <td>
-                            <span class="badge bg-secondary-subtle text-secondary rounded-pill px-3">
-                                {{ sale.attendant.username }}
+
+                        <!-- column 3: Product Label Title -->
+                        <td class="mobile-row-block border-bottom-mobile mt-1">
+                            <div class="fw-bold text-primary fs-6">{{ sale.product.name }}</div>
+                        </td>
+
+                        <!-- column 4: Store Attendant Identity Badge -->
+                        <td class="mobile-row-block mb-2">
+                            <span class="text-muted d-md-none small me-1">Sold By:</span>
+                            <span class="badge bg-secondary-subtle text-secondary rounded-pill px-2 py-1" style="font-size: 0.7rem;">
+                                <i class="fas fa-user-circle me-1"></i>{{ sale.attendant.username }}
                             </span>
                         </td>
-                        <td>{{ sale.quantity }}</td>
-                        <td>{{ sale.negotiated_price }}</td>
-                        <td class="text-end pe-4 fw-bold text-success">{{ sale.total_amount }} UGX</td>
+
+                        <!-- column 5: Quantities Sold -->
+                        <td class="text-center-md mobile-row-inline text-muted small">
+                            <span class="d-md-none">Quantity:</span> <strong class="text-body-emphasis">{{ sale.quantity }} pcs</strong>
+                        </td>
+
+                        <!-- column 6: Individual Unit Value Pricing -->
+                        <td class="text-end-md mobile-row-inline text-muted small ms-3 ms-md-0">
+                            <span class="d-md-none">Unit:</span> {{ sale.negotiated_price|intcomma }} UGX
+                        </td>
+
+                        <!-- column 7: Multiplied Total Gross Settlement -->
+                        <td class="text-end pe-md-4 fw-bold text-success mobile-row-block text-end mt-2 pt-2 border-top-mobile-none">
+                            <span class="d-inline d-md-none text-muted fw-normal small float-start mt-1">Total Received:</span>
+                            <span class="fs-5 fs-md-6">{{ sale.total_amount|intcomma }}</span> <small class="fw-normal" style="font-size: 0.75rem;">UGX</small>
+                        </td>
                     </tr>
                     {% empty %}
                     <tr>
-                        <td colspan="7" class="text-center py-5 text-muted">
+                        <td colspan="7" class="text-center py-5 text-muted bg-white">
                             <i class="fas fa-receipt fa-3x mb-3 d-block opacity-25"></i>
-                            No sales records found.
+                            <p class="small mb-0">No sales records found in your transaction history.</p>
                         </td>
                     </tr>
                     {% endfor %}

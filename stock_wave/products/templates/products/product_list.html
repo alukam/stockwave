@@ -47,7 +47,7 @@
             <div class="col-md-10">
                 <div class="input-group">
                     <span class="input-group-text bg-transparent border-end-0"><i class="fas fa-search text-muted"></i></span>
-                    <input type="text" name="q" class="form-control border-start-0 ps-0" placeholder="Search by part name, category or origin...">
+                    <input type="text" name="q" value="{{ request.GET.q }}" class="form-control border-start-0 ps-0" placeholder="Search by part name, category or origin...">
                 </div>
             </div>
             <div class="col-md-2">
@@ -65,17 +65,10 @@
                     <th class="ps-4">Photo</th>
                     <th>Part Details</th>
                     <th>Source & Location</th>
-                    
-                    {% if user.is_superuser %}
-                    <th class="text-end">Cost Price</th>
-                    {% endif %}
-
+                    {% if user.is_superuser %}<th class="text-end">Cost Price</th>{% endif %}
                     <th class="text-end">Selling Price</th>
                     <th class="text-center">Stock Level</th>
-
-                    {% if user.is_superuser %}
-                    <th class="text-center">Actions</th>
-                    {% endif %}
+                    {% if user.is_superuser %}<th class="text-center">Actions</th>{% endif %}
                 </tr>
             </thead>
             <tbody>
@@ -109,7 +102,7 @@
 
                     <td class="text-end fw-bold text-dark">
                         {{ item.selling_price|intcomma }} <small class="text-muted fw-normal">UGX</small>
-                        {% if not item.is_fixed_price %}
+                        {% if not item.has_fixed_price %}
                             <i class="fas fa-handshake text-warning ms-1" data-bs-toggle="tooltip" title="Negotiable"></i>
                         {% endif %}
                     </td>

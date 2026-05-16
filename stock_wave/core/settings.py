@@ -9,8 +9,8 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-89g+fpe-@$atc%6%+_h0w1d$5yqw)v5mdmfo@ts3p9by!3-hnx')
 
 # Debug should be False in production
-DEBUG = os.environ.get('DEBUG', 'False') == 'True'
-
+#DEBUG = os.environ.get('DEBUG', 'False') == 'True'
+DEBUG = True  # Set to False in production!
 # Allow Render domain and localhost
 ALLOWED_HOSTS = ['*'] 
 
@@ -74,16 +74,17 @@ WSGI_APPLICATION = 'core.wsgi.application'
 
 # Use the Render database URL if it exists, otherwise use local SQLite
 
+'''''''''
 DATABASES = {
     'default': dj_database_url.config(
         default=f"sqlite:///{os.path.join(BASE_DIR, 'db.sqlite3')}",
         conn_max_age=600
     )
 }
-
+'''
 # core/settings.py (Local version)
 
-'''''''''
+
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
@@ -94,7 +95,7 @@ DATABASES = {
         'PORT': '5432',
     }
 }
-'''
+
 
 # --- STATIC FILES ---
 STATIC_URL = 'static/'
@@ -104,12 +105,12 @@ STATIC_ROOT = BASE_DIR / 'staticfiles' # Required for production
 # Enable WhiteNoise compression
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 # settings.py
-WHITENOISE_MANIFEST_STRICT = False
+#WHITENOISE_MANIFEST_STRICT = False
 
 # settings.py
-#LOGIN_URL = '/accounts/login/'
-#LOGIN_REDIRECT_URL = '/'
-#LOGOUT_REDIRECT_URL = '/accounts/login/'
+LOGIN_URL = '/accounts/login/'
+LOGIN_REDIRECT_URL = '/'
+LOGOUT_REDIRECT_URL = '/accounts/login/'
 
 LOGIN_URL = 'login'          # Points to the 'name=login' in your urls.py
 LOGIN_REDIRECT_URL = 'dashboard'  # Where to go after success

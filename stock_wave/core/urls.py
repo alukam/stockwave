@@ -44,6 +44,11 @@ urlpatterns = [
     path('expenses/', include('expenses.urls')),
     path('debtors/', include('debtors.urls')),
     path('reports/', include('reports.urls')),
+    path('categories/', include('categories.urls')),
+    
+
+
+
 
     # 5. Management Routes
     path('management/', user_views.admin_management, name='admin_management'),

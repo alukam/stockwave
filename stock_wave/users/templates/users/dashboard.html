@@ -100,7 +100,7 @@
                                 <div class="fw-bold small">{{ item.name }}</div>
                                 <span class="badge bg-danger-subtle text-danger" style="font-size: 0.7rem;">Only {{ item.quantity }} left</span>
                             </div>
-                            <a href="{% url 'inventory' %}" class="btn btn-sm btn-dark">Restock</a>
+                            <a href="{% url 'product_list' %}" class="btn btn-sm btn-dark">Restock</a>
                         </div>
                         {% endfor %}
                     {% else %}

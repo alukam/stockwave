@@ -5,6 +5,11 @@ from .models import Debtor, PartialPayment
 from products.models import Product
 
 
+# debtors/views.py
+from django.shortcuts import redirect, get_object_or_404
+from .models import Debtor
+
+
 
 # 1. VIEW ALL DEBTORS
 def debtor_list(request):

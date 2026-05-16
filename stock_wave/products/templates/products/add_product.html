@@ -95,12 +95,13 @@
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label fw-bold">Category</label>
-                                <select name="category" class="form-select form-control-pro form-select-lg">
-                                    <option value="">-- Choose Category --</option>
+                                <input list="category-options" name="category_name" class="form-control form-control-pro form-control-lg" placeholder="Type or select category..." required>
+                                
+                                <datalist id="category-options">
                                     {% for cat in categories %}
-                                        <option value="{{ cat.id }}">{{ cat.name }}</option>
+                                        <option value="{{ cat.name }}">
                                     {% endfor %}
-                                </select>
+                                </datalist>
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label fw-bold">Hardware Photo</label>
@@ -150,7 +151,7 @@
                             <button type="submit" class="btn btn-primary btn-lg px-5 py-3 fw-black rounded-3 shadow">
                                 <i class="fas fa-cloud-upload-alt me-2"></i>ADD TO STOCK
                             </button>
-                            <a href="{% url 'inventory' %}" class="btn btn-outline-secondary btn-lg px-5 py-3 rounded-3">
+                            <a href="{% url 'product_list' %}" class="btn btn-outline-secondary btn-lg px-5 py-3 rounded-3">
                                 DISCARD
                             </a>
                         </div>

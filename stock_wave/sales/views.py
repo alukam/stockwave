@@ -38,65 +38,79 @@ def dashboard_view(request):
     return render(request, 'dashboard.html', context)
 
 @login_required
+def edit_sale(request, sale_id):
+    # SECURITY: Only fetch a sale if it belongs to the logged-in user
+    sale = get_object_or_404(Sale, id=sale_id, attendant=request.user)
+    products = Product.objects.all()
+
+    if request.method == "POST":
+        try:
+            # 1. Safe Data Extraction
+            new_product_id = request.POST.get('product')
+            qty_raw = request.POST.get('quantity', '0').strip()
+            price_raw = request.POST.get('negotiated_price', '0').replace(',', '').replace('/-', '').strip()
+
+            # Convert safely - default to 0 if string is empty
+            new_qty = int(qty_raw) if qty_raw else 0
+            new_price = float(price_raw) if price_raw else 0.0
+
+            # 2. Revert Old Stock First
+            old_product = sale.product
+            old_product.quantity += sale.quantity
+            old_product.save()
+
+            # 3. Process New Stock
+            new_product = get_object_or_404(Product, id=new_product_id)
+
+            if new_product.quantity < new_qty:
+                # If fail, re-deduct the old quantity so the DB stays consistent
+                old_product.quantity -= sale.quantity
+                old_product.save()
+                messages.error(request, f"Not enough stock! Only {new_product.quantity} left.")
+                return redirect('edit_sale', sale_id=sale.id)
+
+            # 4. Update Sale Record
+            sale.product = new_product
+            sale.quantity = new_qty
+            sale.negotiated_price = new_price
+            sale.total_amount = new_qty * new_price
+            sale.save()
+
+            # 5. Deduct New Stock
+            new_product.quantity -= new_qty
+            new_product.save()
+
+            messages.success(request, "Sale updated successfully!")
+            return redirect('sales_management')
+
+        except Exception as e:
+            messages.error(request, f"Error updating sale: {e}")
+            return redirect('edit_sale', sale_id=sale.id)
+
+    return render(request, 'sales/edit_sale.html', {'sale': sale, 'products': products})
+
+@login_required
 def sales_management(request):
     query = request.GET.get('q')
-    # Fetch all sales, newest first
-    all_sales = Sale.objects.all().order_by('-timestamp')
+    
+    # PRIVACY: Filter so users only see their own sales
+    all_sales = Sale.objects.filter(attendant=request.user).order_by('-timestamp')
     
     if query:
         all_sales = all_sales.filter(
             Q(product__name__icontains=query) |
-            Q(attendant__username__icontains=query) |
             Q(id__icontains=query)
         )
     
-    # Calculate the sum of the filtered results
     overall_total = all_sales.aggregate(Sum('total_amount'))['total_amount__sum'] or 0
     
     context = {
         'sales': all_sales,
-        'overall_total': f"{overall_total:,}", # Added comma formatting for UGX
+        'overall_total': f"{overall_total:,}", 
         'query': query
     }
     return render(request, 'sales/sales_management.html', context)
 
-
-@login_required
-def edit_sale(request, sale_id):
-    sale = get_object_or_404(Sale, id=sale_id)
-    products = Product.objects.all()
-
-    if request.method == "POST":
-        new_product_id = request.POST.get('product')
-        new_qty = int(request.POST.get('quantity'))
-        new_price = int(request.POST.get('negotiated_price'))
-
-        # Return old stock
-        old_product = sale.product
-        old_product.quantity += sale.quantity
-        old_product.save()
-
-        new_product = get_object_or_404(Product, id=new_product_id)
-
-        if new_product.quantity < new_qty:
-            old_product.quantity -= sale.quantity
-            old_product.save()
-            messages.error(request, f"Not enough stock! Only {new_product.quantity} left.")
-            return redirect('edit_sale', sale_id=sale.id)
-
-        sale.product = new_product
-        sale.quantity = new_qty
-        sale.negotiated_price = new_price
-        sale.total_amount = new_qty * new_price
-        sale.save()
-
-        new_product.quantity -= new_qty
-        new_product.save()
-
-        messages.success(request, "Sale updated successfully!")
-        return redirect('sales_management')
-
-    return render(request, 'sales/edit_sale.html', {'sale': sale, 'products': products})
 @login_required
 def create_sale(request):
     if request.method == 'POST':

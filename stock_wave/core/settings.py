@@ -5,13 +5,12 @@ from pathlib import Path
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 # --- SECURITY ---
-# Get secret key from environment variable, or use the insecure one for local dev
 SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-89g+fpe-@$atc%6%+_h0w1d$5yqw)v5mdmfo@ts3p9by!3-hnx')
 
-# Debug should be False in production
-#DEBUG = os.environ.get('DEBUG', 'False') == 'True'
-DEBUG = True  # Set to False in production!
-# Allow Render domain and localhost
+# FIXED: Dynamically flip DEBUG to False on Render so errors don't leak, default to True locally
+DEBUG = 'RENDER' not in os.environ
+
+# ALLOWED HOSTS
 ALLOWED_HOSTS = ['*'] 
 
 # --- APPS ---
@@ -37,7 +36,7 @@ AUTH_USER_MODEL = 'users.User'
 # --- MIDDLEWARE ---
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
-    'whitenoise.middleware.WhiteNoiseMiddleware', # REQUIRED for static files on Render
+    'whitenoise.middleware.WhiteNoiseMiddleware', 
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -47,8 +46,6 @@ MIDDLEWARE = [
 ]
 
 ROOT_URLCONF = 'core.urls'
-
-
 
 TEMPLATES = [
     {
@@ -69,12 +66,6 @@ TEMPLATES = [
 WSGI_APPLICATION = 'core.wsgi.application'
 
 # --- DATABASE ---
-# This looks for a DATABASE_URL environment variable (from Render). 
-# If it doesn't find one, it falls back to your local PostgreSQL settings.
-
-# Use the Render database URL if it exists, otherwise use local SQLite
-
-
 DATABASES = {
     'default': dj_database_url.config(
         default=f"sqlite:///{os.path.join(BASE_DIR, 'db.sqlite3')}",
@@ -82,39 +73,23 @@ DATABASES = {
     )
 }
 
-# core/settings.py (Local version)
-
-'''''''''
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'inventory_db',
-        'USER': 'inventory_users',      # usually 'postgres'
-        'PASSWORD': '2000@2000',
-        'HOST': 'localhost',
-        'PORT': '5432',
-    }
-}
-'''''
+# If we are on Render, force SSL connection parameters for Postgres
+if 'RENDER' in os.environ:
+    DATABASES['default']['OPTIONS'] = {'sslmode': 'require'}
 
 # --- STATIC FILES ---
 STATIC_URL = 'static/'
 STATICFILES_DIRS = [BASE_DIR / 'static']
-STATIC_ROOT = BASE_DIR / 'staticfiles' # Required for production
+STATIC_ROOT = BASE_DIR / 'staticfiles' 
 
-# Enable WhiteNoise compression
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
-# settings.py
-#WHITENOISE_MANIFEST_STRICT = False
 
-# settings.py
-LOGIN_URL = '/accounts/login/'
-LOGIN_REDIRECT_URL = '/'
-LOGOUT_REDIRECT_URL = '/accounts/login/'
+# --- AUTHENTICATION ROUTING (FIXED DUPLICATES) ---
+# We use explicit string names that match your path('...', name='...') configs
+LOGIN_URL = 'login'          
+LOGIN_REDIRECT_URL = 'dashboard'  
+LOGOUT_REDIRECT_URL = 'login'     
 
-LOGIN_URL = 'login'          # Points to the 'name=login' in your urls.py
-LOGIN_REDIRECT_URL = 'dashboard'  # Where to go after success
-LOGOUT_REDIRECT_URL = 'login'     # Where to go after sign out
 # --- MISC ---
 LANGUAGE_CODE = 'en-us'
 TIME_ZONE = 'Africa/Kampala'

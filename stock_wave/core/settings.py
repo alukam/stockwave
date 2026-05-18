@@ -1,5 +1,5 @@
 import os
-#import dj_database_url
+import dj_database_url
 from pathlib import Path
 
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -64,7 +64,7 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = 'core.wsgi.application'
-'''''''''
+
 # --- DATABASE ---
 DATABASES = {
     'default': dj_database_url.config(
@@ -72,7 +72,7 @@ DATABASES = {
         conn_max_age=600
     )
 }
-'''''
+'''''''''
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
@@ -83,7 +83,7 @@ DATABASES = {
         'PORT': '5432',
     }
 }
-
+'''''
 
 
 

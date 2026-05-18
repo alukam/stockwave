@@ -1,121 +1,218 @@
 {% extends 'base.html' %}
 {% load humanize %}
 
-{% block content %}
+{% block extra_css %}
 <style>
-    .glass-card {
-        background: white;
-        border-radius: 15px;
-        border: 1px solid rgba(0,0,0,0.05);
-        transition: transform 0.2s;
+    /* Table general framework */
+    .table-modern thead th {
+        font-weight: 600;
+        font-size: 0.85rem;
+        text-transform: uppercase;
+        letter-spacing: 0.02em;
+        background-color: var(--bs-tertiary-bg) !important; 
+        color: var(--bs-secondary-color) !important;
+        border-bottom: 2px solid var(--bs-border-color);
+        vertical-align: middle;
     }
-    .glass-card:hover { transform: translateY(-5px); }
-    .stat-icon {
-        width: 48px; height: 48px;
-        display: flex; align-items: center; justify-content: center;
+    
+    /* Strict layout anchors to ensure headers match rows perfectly */
+    .col-fixed-qty { width: 100px !important; text-align: center !important; }
+    .col-fixed-price { width: 160px !important; text-align: right !important; padding-right: 25px !important; }
+    .col-fixed-total { width: 170px !important; text-align: right !important; padding-right: 25px !important; }
+    .col-fixed-actions { width: 130px !important; text-align: center !important; }
+
+    /* Glass card interface rules */
+    .glass-card {
+        background: var(--bs-card-bg);
+        border: 1px solid var(--bs-border-color);
         border-radius: 12px;
     }
-    .table-modern thead { background: #f8f9fa; }
-    .table-modern td { vertical-align: middle; padding: 15px; }
-    .badge-soft-success { background: #e6f4ea; color: #1e7e34; border: none; }
+    [data-bs-theme="dark"] .glass-card {
+        background: rgba(30, 41, 59, 0.7);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    .stat-icon {
+        width: 44px; height: 44px;
+        display: flex; align-items: center; justify-content: center;
+        border-radius: 10px;
+    }
+    .badge-soft-success { 
+        background: rgba(25, 135, 84, 0.15); 
+        color: #198754; 
+    }
+    [data-bs-theme="dark"] .badge-soft-success {
+        background: rgba(25, 135, 84, 0.25);
+        color: #4cd137;
+    }
 </style>
+{% endblock %}
 
-<div class="container-fluid py-4">
-    <div class="row align-items-center mb-4">
-        <div class="col-12 col-md-6 mb-3 mb-md-0">
-            <h2 class="fw-bold mb-0">Sales Executive View</h2>
-            <p class="text-muted mb-0">Tracking real-time transactions & revenue</p>
+{% block content %}
+<div class="container-fluid px-1 px-sm-3">
+    
+    <!-- Header Block -->
+    <div class="row align-items-center g-3 mb-4">
+        <div class="col-7 col-md-6">
+            <h2 class="fw-bold h4 h3-md mb-0 text-emphasis">Sales Executive View</h2>
+            <p class="text-muted small mb-0 d-none d-sm-block">Tracking real-time transactions & revenue balances</p>
         </div>
-        <div class="col-12 col-md-6 text-md-end">
-            <a href="{% url 'add_sale' %}" class="btn btn-primary btn-lg shadow-sm w-100 w-md-auto">
-                <i class="fas fa-plus-circle me-2"></i> New Transaction
+        <div class="col-5 col-md-6 text-end">
+            <a href="{% url 'add_sale' %}" class="btn btn-primary btn-sm px-2 px-md-4 shadow-sm fw-bold">
+                <i class="fas fa-plus-circle me-1 me-md-2"></i>New Transaction
             </a>
         </div>
     </div>
 
-    <div class="row g-4 mb-5">
-        <div class="col-12 col-sm-6 col-lg-4">
-            <div class="glass-card p-4 shadow-sm border-start border-4 border-success h-100">
-                <div class="d-flex justify-content-between">
-                    <div>
-                        <small class="text-muted fw-bold">TOTAL REVENUE</small>
-                        <span class="fw-bold h5 text-primary">{{ overall_total|intcomma }} <small class="fs-6 fw-normal">UGX</small></span>
-                    </div>
-                    <div class="stat-icon bg-success text-white">
-                        <i class="fas fa-money-bill-wave"></i>
+    <!-- Analytics Counter Cards Matrix -->
+    <div class="row g-3 mb-4">
+        <div class="col-12 col-sm-6">
+            <div class="card glass-card shadow-sm border-start border-4 border-success h-100">
+                <div class="card-body p-3">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <small class="text-muted fw-bold d-block mb-1" style="font-size: 0.7rem; letter-spacing: 0.05em;">TOTAL REVENUE</small>
+                            <span class="fw-bold h4 text-success mb-0">{{ overall_total|default:0|intcomma }} <small class="fw-normal text-muted" style="font-size: 0.75rem;">UGX</small></span>
+                        </div>
+                        <div class="stat-icon bg-success text-white">
+                            <i class="fas fa-money-bill-wave"></i>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
 
-        <div class="col-12 col-sm-6 col-lg-4">
-            <div class="glass-card p-4 shadow-sm border-start border-4 border-primary h-100">
-                <div class="d-flex justify-content-between">
-                    <div>
-                        <small class="text-muted fw-bold">TOTAL SALES</small>
-                        <h2 class="fw-bold mt-1 text-dark">{{ sales.count }} <small class="fs-6">Receipts</small></h2>
-                    </div>
-                    <div class="stat-icon bg-primary text-white">
-                        <i class="fas fa-shopping-basket"></i>
+        <div class="col-12 col-sm-6">
+            <div class="card glass-card shadow-sm border-start border-4 border-primary h-100">
+                <div class="card-body p-3">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <small class="text-muted fw-bold d-block mb-1" style="font-size: 0.7rem; letter-spacing: 0.05em;">TOTAL SALES</small>
+                            <span class="fw-bold h4 text-body-emphasis mb-0">{{ sales.count }} <small class="fw-normal text-muted" style="font-size: 0.75rem;">Receipts</small></span>
+                        </div>
+                        <div class="stat-icon bg-primary text-white">
+                            <i class="fas fa-shopping-basket"></i>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <div class="glass-card shadow-sm overflow-hidden">
-        <div class="p-4 border-bottom bg-white d-flex justify-content-between align-items-center">
-            <h5 class="mb-0 fw-bold text-secondary">Transaction History</h5>
-            <span class="badge badge-soft-success p-2 px-3 d-none d-sm-inline">Real-time Sync Active</span>
+    <!-- DESKTOP CONTAINER: Aligned Grid (Hidden on Mobile) -->
+    <div class="card shadow-sm border-0 glass-card d-none d-md-block mb-4">
+        <div class="p-3 border-bottom d-flex justify-content-between align-items-center">
+            <h5 class="mb-0 fw-bold text-body-emphasis h6">Transaction History Ledger</h5>
+            <span class="badge badge-soft-success p-2 px-3 small border">Real-time Sync Active</span>
         </div>
         <div class="table-responsive">
-            <table class="table table-modern mb-0">
+            <!-- Added layout-fixed matrix table structure layout style -->
+            <table class="table table-hover align-middle table-modern mb-0" style="table-layout: fixed; width: 100%;">
                 <thead>
                     <tr>
-                        <th class="ps-4">Timestamp</th>
-                        <th>Product Item</th>
-                        <th>Qty</th>
-                        <th>Sold Price</th>
-                        <th>Total</th>
-                        <th class="text-center">Actions</th>
+                        <th class="ps-4" style="width: 140px; text-align: left;">Timestamp</th>
+                        <th style="text-align: left;">Product Item</th>
+                        <th class="col-fixed-qty">Qty</th>
+                        <th class="col-fixed-price">Unit Price</th>
+                        <th class="col-fixed-total">Total Amount</th>
+                        <th class="col-fixed-actions">Actions</th>
                     </tr>
                 </thead>
                 <tbody>
                     {% for sale in sales %}
                     <tr>
-                        <td class="ps-4">
-                            <div class="d-flex flex-column">
-                                <span class="fw-bold">{{ sale.timestamp|date:"D, d M" }}</span>
-                                <small class="text-muted">{{ sale.timestamp|date:"H:i A" }}</small>
-                            </div>
+                        <td class="ps-4" style="text-align: left;">
+                            <div class="fw-bold text-body-emphasis mb-0 small lh-sm">{{ sale.timestamp|date:"D, d M" }}</div>
+                            <small class="text-muted" style="font-size: 0.7rem;">{{ sale.timestamp|date:"H:i A" }}</small>
                         </td>
-                        <td>
-                            <div class="fw-bold text-dark">{{ sale.product.name }}</div>
-                            <small class="text-muted">By: {{ sale.attendant.username }}</small>
+                        <td style="text-align: left;">
+                            <div class="fw-bold text-body-emphasis mb-0 lh-sm text-truncate" style="max-width: 100%;">{{ sale.product.name }}</div>
+                            <small class="text-muted d-block text-truncate" style="font-size: 0.7rem; max-width: 100%;">Attendant: {{ sale.attendant.username }}</small>
                         </td>
-                        <td><span class="badge bg-light text-dark border">{{ sale.quantity }}</span></td>
-                        <td>{{ sale.negotiated_price|intcomma }}</td>
-                        <td class="fw-bold text-success">{{ sale.total_amount|intcomma }}</td>
-                        <td class="text-center">
+                        <td class="col-fixed-qty">
+                            <span class="badge bg-body-secondary text-body border px-2 py-1 fw-bold" style="font-size: 0.7rem; min-width: 35px; display: inline-block;">
+                                {{ sale.quantity }}
+                            </span>
+                        </td>
+                        <td class="col-fixed-price text-muted small">
+                            <span>{{ sale.negotiated_price|intcomma }}</span> <small class="text-uppercase fw-normal" style="font-size: 0.65rem;">UGX</small>
+                        </td>
+                        <td class="col-fixed-total fw-bold text-success">
+                            <span>{{ sale.total_amount|intcomma }}</span> <small class="text-muted fw-normal" style="font-size: 0.65rem;">UGX</small>
+                        </td>
+                        <td class="col-fixed-actions">
                             {% if user.is_superuser %}
                             <a href="{% url 'cancel_sale' sale.id %}" 
-                               class="btn btn-sm btn-outline-danger px-3 rounded-pill"
-                               onclick="return confirm('WARNING: Cancel this sale?')">
-                                <i class="fas fa-undo me-1"></i> <span class="d-none d-xl-inline">Cancel</span>
+                               class="btn btn-sm btn-outline-danger py-1 px-2 fw-semibold" style="font-size: 0.75rem;"
+                               onclick="return confirm('WARNING: Revert and cancel this sale file completely?')">
+                                <i class="fas fa-undo me-1"></i>Cancel
                             </a>
                             {% else %}
-                            <i class="fas fa-check-circle text-success"></i>
+                            <i class="fas fa-check-circle text-success fs-6" title="Verified Ledger"></i>
                             {% endif %}
                         </td>
                     </tr>
                     {% empty %}
                     <tr>
-                        <td colspan="6" class="text-center py-5 text-muted">No sales records found.</td>
+                        <td colspan="6" class="text-center py-5 text-muted">
+                            <i class="fas fa-receipt fa-2x mb-2 opacity-25"></i>
+                            <p class="small mb-0">No transaction records generated today.</p>
+                        </td>
                     </tr>
                     {% endfor %}
                 </tbody>
             </table>
         </div>
+    </div>
+
+    <!-- MOBILE CONTAINER: Document Cards (Optimized for iPhone 8 Screens) -->
+    <div class="d-block d-md-none">
+        <div class="d-flex justify-content-between align-items-center mb-2 px-1">
+            <h5 class="small fw-bold text-muted text-uppercase mb-0" style="letter-spacing: 0.02em;">Transaction History</h5>
+            <span class="badge badge-soft-success border px-2 py-1" style="font-size: 0.6rem;">Sync Live</span>
+        </div>
+        
+        {% for sale in sales %}
+        <div class="card glass-card p-3 mb-3 shadow-sm">
+            <!-- Mobile Row 1: Item Info & Timestamp -->
+            <div class="d-flex justify-content-between align-items-start gap-2 mb-2 pb-2 border-bottom">
+                <div class="min-w-0">
+                    <div class="fw-bold text-body-emphasis text-truncate" style="max-width: 190px;">{{ sale.product.name }}</div>
+                    <small class="text-muted d-block" style="font-size: 0.7rem;">Attendant: {{ sale.attendant.username }}</small>
+                </div>
+                <div class="text-end flex-shrink-0">
+                    <span class="fw-bold text-body-emphasis small d-block">{{ sale.timestamp|date:"d M, H:i" }}</span>
+                    <span class="badge bg-body-secondary text-body border" style="font-size: 0.65rem;">{{ sale.quantity }} pcs</span>
+                </div>
+            </div>
+
+            <!-- Mobile Row 2: Financial Metrics Display -->
+            <div class="row g-0 align-items-center">
+                <div class="col-7">
+                    <small class="text-muted d-block" style="font-size: 0.65rem;">UNIT: {{ sale.negotiated_price|intcomma }} UGX</small>
+                    <small class="text-muted text-uppercase fw-bold d-block" style="font-size: 0.55rem; letter-spacing: 0.02em;">GROSS RECEIPT AMOUNT</small>
+                    <div class="fw-bold text-success" style="font-size: 1.05rem;">
+                        {{ sale.total_amount|intcomma }} <small class="fw-normal text-muted" style="font-size: 0.7rem;">UGX</small>
+                    </div>
+                </div>
+                <div class="col-5 text-end">
+                    {% if user.is_superuser %}
+                    <a href="{% url 'cancel_sale' sale.id %}" 
+                       class="btn btn-xs btn-outline-danger px-2 py-1 fw-bold" style="font-size: 0.7rem; border-radius: 6px;"
+                       onclick="return confirm('WARNING: Revert and cancel this sale file completely?')">
+                        <i class="fas fa-undo me-1"></i>Cancel
+                    </a>
+                    {% else %}
+                    <span class="text-success small fw-semibold"><i class="fas fa-check-circle me-1"></i>Posted</span>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="card glass-card p-4 text-center text-muted">
+            <i class="fas fa-receipt fa-2x mb-2 opacity-25"></i>
+            <p class="small mb-0">No ledger streams running on local node.</p>
+        </div>
+        {% endfor %}
     </div>
 </div>
 {% endblock %}

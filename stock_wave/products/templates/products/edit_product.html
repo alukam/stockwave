@@ -1,0 +1,149 @@
+{% extends 'base.html' %}
+{% load humanize %}
+
+{% block extra_css %}
+<style>
+    .glass-card {
+        background: var(--bs-card-bg);
+        border: 1px solid var(--bs-border-color);
+        border-radius: 12px;
+    }
+    [data-bs-theme="dark"] .glass-card {
+        background: rgba(30, 41, 59, 0.7);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-1 px-sm-3">
+    <!-- Header Block -->
+    <div class="row align-items-center g-3 mb-4">
+        <div class="col-12">
+            <div class="mb-2">
+                <a href="{% url 'product_list' %}" class="text-decoration-none small text-muted">
+                    <i class="fas fa-arrow-left me-2"></i>Back to Inventory Control
+                </a>
+            </div>
+            <h2 class="fw-bold text-body-emphasis h4 h3-md mb-1">Edit Inventory Item</h2>
+            <p class="text-muted small mb-0">Modify tracking metrics, warehouse location, and core pricing files</p>
+        </div>
+    </div>
+
+    <!-- Alert Messaging Layer -->
+    {% if messages %}
+    <div class="row mb-3">
+        <div class="col-12 col-lg-8">
+            {% for message in messages %}
+            <div class="alert alert-{% if message.tags == 'error' %}danger{% else %}{{ message.tags }}{% endif %} alert-dismissible fade show shadow-sm" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Primary Form Core Container -->
+    <div class="row">
+        <div class="col-12 col-lg-8">
+            <div class="card shadow-sm border-0 glass-card mb-4">
+                <div class="card-body p-3 p-sm-4">
+                    <form method="POST" enctype="multipart/form-data" class="needs-validation" novalidate>
+                        {% csrf_token %}
+                        
+                        <!-- Row 1: Part Structural Label -->
+                        <div class="mb-3">
+                            <label for="id_name" class="form-label small fw-bold text-secondary text-uppercase" style="font-size: 0.7rem; letter-spacing: 0.05em;">Part Details / Name</label>
+                            <input type="text" name="name" id="id_name" class="form-control form-control-md bg-transparent" 
+                                   value="{{ form.name.value|default:product.name }}" required>
+                        </div>
+
+                        <!-- Row 2: Warehouse Coordinate Nodes -->
+                        <div class="row g-3 mb-3">
+                            <div class="col-12 col-sm-6">
+                                <label for="id_location" class="form-label small fw-bold text-secondary text-uppercase" style="font-size: 0.7rem; letter-spacing: 0.05em;">Source Location (Shelf)</label>
+                                <input type="text" name="location" id="id_location" class="form-control bg-transparent" 
+                                       value="{{ form.location.value|default:product.location }}" placeholder="e.g., Shelf C-2" required>
+                            </div>
+                            <div class="col-12 col-sm-6">
+                                <label for="id_origin" class="form-label small fw-bold text-secondary text-uppercase" style="font-size: 0.7rem; letter-spacing: 0.05em;">Brand Origin / Manufacturer</label>
+                                <input type="text" name="origin" id="id_origin" class="form-control bg-transparent" 
+                                       value="{{ form.origin.value|default:product.origin }}" placeholder="e.g., Japan OEM" required>
+                            </div>
+                        </div>
+
+                        <!-- Row 3: Financial Pricing Matrices -->
+                        <div class="row g-3 mb-3">
+                            <div class="col-12 col-sm-6">
+                                <label for="id_cost_price" class="form-label small fw-bold text-secondary text-uppercase" style="font-size: 0.7rem; letter-spacing: 0.05em;">Cost Price Base</label>
+                                <div class="input-group input-group-md">
+                                    <input type="number" step="0.01" name="cost_price" id="id_cost_price" class="form-control bg-transparent text-end" 
+                                           value="{{ form.cost_price.value|default:product.cost_price }}" required>
+                                    <span class="input-group-text bg-body-secondary small text-muted">UGX</span>
+                                </div>
+                            </div>
+                            <div class="col-12 col-sm-6">
+                                <label for="id_selling_price" class="form-label small fw-bold text-secondary text-uppercase" style="font-size: 0.7rem; letter-spacing: 0.05em;">Retail Value</label>
+                                <div class="input-group input-group-md">
+                                    <input type="number" step="0.01" name="selling_price" id="id_selling_price" class="form-control bg-transparent text-end" 
+                                           value="{{ form.selling_price.value|default:product.selling_price }}" required>
+                                    <span class="input-group-text bg-body-secondary small text-muted">UGX</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Row 4: Native Quantities Counters -->
+                        <div class="mb-4" style="max-width: 260px;">
+                            <label for="id_quantity" class="form-label small fw-bold text-secondary text-uppercase" style="font-size: 0.7rem; letter-spacing: 0.05em;">Physical Stock Count</label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-body-secondary"><i class="fas fa-boxes-stacked text-muted"></i></span>
+                                <input type="number" name="quantity" id="id_quantity" class="form-control bg-transparent text-center fw-bold text-primary" 
+                                       value="{{ form.quantity.value|default:product.quantity }}" required min="0">
+                                <span class="input-group-text bg-body-secondary small text-muted">pcs</span>
+                            </div>
+                        </div>
+
+                        <!-- Row 5: Media Files Input Elements -->
+                        <div class="mb-4">
+                            <label for="id_photo" class="form-label small fw-bold text-secondary text-uppercase" style="font-size: 0.7rem; letter-spacing: 0.05em;">Component Asset Thumbnail</label>
+                            {% if product.photo %}
+                            <div class="d-flex align-items-center gap-3 mb-2 p-2 border rounded glass-card">
+                                <img src="{{ product.photo.url }}" class="rounded-3 border" style="width: 48px; height: 48px; object-fit: cover;">
+                                <div class="small text-muted text-truncate">Current photo linked. Uploading an alternative path replaces this record.</div>
+                            </div>
+                            {% endif %}
+                            <input type="file" name="photo" id="id_photo" class="form-control form-control-sm bg-transparent">
+                        </div>
+
+                        <hr class="text-muted my-4">
+
+                        <!-- Footer Control Interface Block -->
+                        <div class="d-flex justify-content-end gap-2">
+                            <a href="{% url 'product_list' %}" class="btn btn-sm btn-light border px-4 fw-semibold">Cancel</a>
+                            <button type="submit" class="btn btn-sm btn-primary px-4 fw-bold shadow-sm">Commit Changes</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Native high-speed execution verification block to prevent client-side hanging loop states
+    (() => {
+        'use strict'
+        const validatedForms = document.querySelectorAll('.needs-validation')
+        Array.from(validatedForms).forEach(formElement => {
+            formElement.addEventListener('submit', runVerification => {
+                if (!formElement.checkValidity()) {
+                    runVerification.preventDefault()
+                    runVerification.stopPropagation()
+                }
+                formElement.classList.add('was-validated')
+            }, false)
+        })
+    })()
+</script>
+{% endblock %}

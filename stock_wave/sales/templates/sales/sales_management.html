@@ -3,6 +3,22 @@
 
 {% block extra_css %}
 <style>
+    /* Table general styling for desktop */
+    @media (min-width: 768px) {
+        .responsive-sales-table {
+            table-layout: fixed;
+            width: 100%;
+        }
+        /* Specific column definitions to lock alignment grids */
+        .responsive-sales-table th:nth-child(1), .responsive-sales-table td:nth-child(1) { width: 90px; }
+        .responsive-sales-table th:nth-child(2), .responsive-sales-table td:nth-child(2) { width: 140px; }
+        .responsive-sales-table th:nth-child(3), .responsive-sales-table td:nth-child(3) { width: auto; }
+        .responsive-sales-table th:nth-child(4), .responsive-sales-table td:nth-child(4) { width: 140px; }
+        .responsive-sales-table th:nth-child(5), .responsive-sales-table td:nth-child(5) { width: 90px; }
+        .responsive-sales-table th:nth-child(6), .responsive-sales-table td:nth-child(6) { width: 150px; }
+        .responsive-sales-table th:nth-child(7), .responsive-sales-table td:nth-child(7) { width: 170px; }
+    }
+
     /* Styling for glass card layouts */
     .glass-card {
         background: var(--bs-card-bg);
@@ -92,13 +108,13 @@
             <table class="table table-hover align-middle mb-0 responsive-sales-table">
                 <thead class="bg-light">
                     <tr>
-                        <th class="ps-4 py-3 text-muted small text-uppercase" style="width: 90px;">ID</th>
+                        <th class="ps-md-4 py-3 text-muted small text-uppercase">ID</th>
                         <th class="py-3 text-muted small text-uppercase">Date & Time</th>
                         <th class="py-3 text-muted small text-uppercase">Product</th>
                         <th class="py-3 text-muted small text-uppercase">Attendant</th>
-                        <th class="py-3 text-muted small text-uppercase text-center">Qty</th>
-                        <th class="py-3 text-muted small text-uppercase text-end">Unit Price</th>
-                        <th class="text-end pe-4 py-3 text-muted small text-uppercase">Total Amount</th>
+                        <th class="py-3 text-muted small text-uppercase text-md-center">Qty</th>
+                        <th class="py-3 text-muted small text-uppercase text-md-end">Unit Price</th>
+                        <th class="text-md-end pe-md-4 py-3 text-muted small text-uppercase">Total Amount</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -109,7 +125,7 @@
                             <span class="badge bg-body-secondary text-body-tertiary border">#{{ sale.id }}</span>
                         </td>
 
-                        <!-- column 2: Timestamp (Floats Right on mobile view) -->
+                        <!-- column 2: Timestamp -->
                         <td class="mobile-row-inline mobile-right-align">
                             <div class="fw-semibold small text-body-emphasis d-inline d-md-block">{{ sale.timestamp|date:"d M, Y" }}</div>
                             <small class="text-muted ms-1 ms-md-0 d-inline d-md-block"><i class="far fa-clock me-1 d-md-none"></i>{{ sale.timestamp|time:"H:i" }}</small>
@@ -117,7 +133,7 @@
 
                         <!-- column 3: Product Label Title -->
                         <td class="mobile-row-block border-bottom-mobile mt-1">
-                            <div class="fw-bold text-primary fs-6">{{ sale.product.name }}</div>
+                            <div class="fw-bold text-primary fs-6 text-truncate" style="max-width: 100%;">{{ sale.product.name }}</div>
                         </td>
 
                         <!-- column 4: Store Attendant Identity Badge -->
@@ -129,19 +145,19 @@
                         </td>
 
                         <!-- column 5: Quantities Sold -->
-                        <td class="text-center-md mobile-row-inline text-muted small">
+                        <td class="text-md-center mobile-row-inline text-muted small">
                             <span class="d-md-none">Quantity:</span> <strong class="text-body-emphasis">{{ sale.quantity }} pcs</strong>
                         </td>
 
                         <!-- column 6: Individual Unit Value Pricing -->
-                        <td class="text-end-md mobile-row-inline text-muted small ms-3 ms-md-0">
-                            <span class="d-md-none">Unit:</span> {{ sale.negotiated_price|intcomma }} UGX
+                        <td class="text-md-end mobile-row-inline text-muted small">
+                            <span class="d-md-none px-1">Unit:</span>{{ sale.negotiated_price|intcomma }} <small class="text-muted" style="font-size: 0.65rem;">UGX</small>
                         </td>
 
                         <!-- column 7: Multiplied Total Gross Settlement -->
-                        <td class="text-end pe-md-4 fw-bold text-success mobile-row-block text-end mt-2 pt-2 border-top-mobile-none">
+                        <td class="text-md-end pe-md-4 fw-bold text-success mobile-row-block text-end mt-2 pt-2 border-top-mobile-none">
                             <span class="d-inline d-md-none text-muted fw-normal small float-start mt-1">Total Received:</span>
-                            <span class="fs-5 fs-md-6">{{ sale.total_amount|intcomma }}</span> <small class="fw-normal" style="font-size: 0.75rem;">UGX</small>
+                            <span class="fs-5 fs-md-6">{{ sale.total_amount|intcomma }}</span> <small class="fw-normal text-muted" style="font-size: 0.75rem;">UGX</small>
                         </td>
                     </tr>
                     {% empty %}
